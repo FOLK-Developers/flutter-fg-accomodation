@@ -8,6 +8,107 @@ class allocation extends StatefulWidget{
 }
 
 class allocationpage extends State<allocation>{
+  num lb=0,mb=0,ub=0,rlb=0,rmb=0,rub=0,count=0,totalr=0,prob=0;
+  String note="";
+  static DateTime now = DateTime.now();
+  static var  formatter = DateFormat('yyyy-MM-dd');
+  static var today = formatter.format(now);
+
+  Future<num> reqcount(String s) async {
+    var db = Firestore.instance.collection('requests').document(today).collection('allrequests');
+    var docu= await db.where("preferred_berth",isEqualTo:s).where('status',isEqualTo: "Waiting for approval").getDocuments();
+    docu.documents.forEach((element) {
+      setState(() {
+        if(s=="LOWER_BERTH"){
+          rlb++;
+          totalr++;
+        }
+        else if(s=="MIDDLE_BERTH"){
+          rmb++;
+          totalr++;
+        }
+        else{
+          rub++;
+          totalr++;
+        }
+      });
+    });
+  }
+
+  Future<void> bedData() async {
+    var collectonRef = Firestore.instance.collection('beds');
+    var doc =await collectonRef.document('details').get();
+    if(doc.exists) {
+      setState(() async {
+        lb=doc.data['lower_berth'];
+        mb=doc.data['middle_berth'];
+        ub=doc.data['upper_berth'];
+        count=lb+mb+ub;
+        await reqcount("LOWER_BERTH");
+        await reqcount("MIDDLE_BERTH");
+        await reqcount("UPPER_BERTH");
+        if(totalr==0){
+          note="There is no requests to allocate beds.";
+        }
+        else if(totalr<=count){
+          note="Do you want allocated beds to all $totalr request.";
+        }
+        else{
+          prob=((count/totalr)*100).round();
+          note="Do you want allocated beds to all $totalr requests. Only $prob % ($totalr requests) of requests will get beds allocated.This For the given"
+              "bed counts"
+              "Rest of the request will be cancelled out";
+        }
+      });
+    }
+  }
+  Future<bool> allocate(BuildContext context,String field) {
+    return showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return new AlertDialog(
+            title: Text(field),
+            content: Text(note),
+            contentPadding: EdgeInsets.all(10.0),
+            actions: <Widget>[
+              new Row(
+                children: <Widget>[
+                  MaterialButton(
+                    child: Text("No"),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    padding: EdgeInsets.all(9),
+                    color: Colors.green[900],
+                    shape: new RoundedRectangleBorder(side:BorderSide( width: 3,
+                        style: BorderStyle.solid),borderRadius:BorderRadius.circular(20)),
+                  ),
+                  SizedBox(width: 4,),
+                  MaterialButton(
+                    child: Text("Yes"),
+                    onPressed: () {
+                    },
+                    padding: EdgeInsets.all(9),
+                    color: Colors.green[900],
+                    shape: new RoundedRectangleBorder(side:BorderSide( width: 3,
+                        style: BorderStyle.solid),borderRadius:BorderRadius.circular(20)),
+                  )
+                ],
+              )
+            ],
+          );
+        });
+  }
+
+
+
+  @override
+  void initState(){
+    super.initState();
+    bedData();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -16,8 +117,8 @@ class allocationpage extends State<allocation>{
         children: <Widget>[
           Expanded(child:requestlist()),
           Container(
-            height: 50,
-            color: Colors.green[900],
+            height: 60,
+            color: Colors.white,
             child: Row(
               children: <Widget>[
                 Expanded(
@@ -30,9 +131,11 @@ class allocationpage extends State<allocation>{
                     shape: new RoundedRectangleBorder(side:BorderSide( width: 3,color: Colors.black,
                         style: BorderStyle.solid),borderRadius:BorderRadius.circular(20)),
                     onPressed: (){
+                      allocate(context,"Declining requests.");
                     },
                   ) ,
                 ),
+                SizedBox(width: 5,),
                 Expanded(
                   child: MaterialButton(
                     child: Text('Accept all',
@@ -43,10 +146,17 @@ class allocationpage extends State<allocation>{
                     shape: new RoundedRectangleBorder(side:BorderSide( width: 3,color: Colors.black,
                         style: BorderStyle.solid),borderRadius:BorderRadius.circular(20)),
                     onPressed: (){
+                      allocate(context,"Confirmation for allocation.");
                     },
                   ) ,
                 )
               ],
+            ),
+          ),
+          SizedBox(
+            height: 1,
+            child: Container(
+              color: Colors.green[900],
             ),
           )
         ],
