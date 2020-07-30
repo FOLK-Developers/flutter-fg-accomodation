@@ -67,26 +67,7 @@ class bedavailable extends State<data>{
         }
         else{
           prob=((count/totalr)*100).round();
-          note="Beds available for only $prob %   "
-              ""
-              ""
-              ""
-              ""
-              ""
-              ""
-              ""
-              ""
-              ""
-              ""
-              ""
-              ""
-              ""
-              ""
-              ""
-              ""
-              ""
-              ""
-              ""
+          note="Beds available for only $prob %"
               "($totalr requests) of requests.";
         }
       });
