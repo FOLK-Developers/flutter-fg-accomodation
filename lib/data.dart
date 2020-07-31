@@ -15,13 +15,32 @@ class bedavailable extends State<data>{
   num lb=0,mb=0,ub=0,rlb=0,rmb=0,rub=0,count=0,totalr=0,prob=0;
   num ub1,lb1,mb1;
   Future<num> n;
-  String note="";
+  bool flag=true;
+  String note="",note1="";
   static DateTime now = DateTime.now();
   static var  formatter = DateFormat('yyyy-MM-dd');
   static var today = formatter.format(now);
   TextEditingController lowerberth = TextEditingController();
   TextEditingController middleberth = TextEditingController();
   TextEditingController upperberth = TextEditingController();
+
+
+
+  Future<void> requests() async {
+    var col = await Firestore.instance.collection('request').document(today).collection("allrequests");
+    col.getDocuments().then((value) async {
+      if(value.documents.isNotEmpty){
+        setState((){
+          flag=false;
+        });
+      }
+      else{
+        setState(() {
+          flag=true;
+        });
+      }
+    });
+  }
 
   Future<num> reqcount(String s) async {
     var db = Firestore.instance.collection('requests').document(today).collection('allrequests');
@@ -43,15 +62,15 @@ class bedavailable extends State<data>{
       });
     });
   }
-  
-  Future<void> bedData() async {
+
+  Future<num> bedData() async {
     var collectonRef = Firestore.instance.collection('beds');
     var doc =await collectonRef.document('details').get();
-    if(doc.exists) {
+    if(doc.exists && flag) {
       setState(() async {
-        lb=doc.data['lower_berth'];
-        mb=doc.data['middle_berth'];
-        ub=doc.data['upper_berth'];
+        lb= doc.data['lower_berth'];
+        mb= doc.data['middle_berth'];
+        ub= doc.data['upper_berth'];
         lb1=lb;
         mb1=mb;
         ub1=ub;
@@ -65,6 +84,9 @@ class bedavailable extends State<data>{
         else if(totalr<=count){
           note="Beds available for all the requests.";
         }
+        else if(count==0){
+          note="There is no beds to allocated.";
+        }
         else{
           prob=((count/totalr)*100).round();
           note="Beds available for only $prob %"
@@ -72,7 +94,21 @@ class bedavailable extends State<data>{
         }
       });
     }
+    else{
+      setState(() {
+        lb= doc.data['lower_berth'];
+        mb= doc.data['middle_berth'];
+        ub= doc.data['upper_berth'];
+        count=lb+mb+ub;
+        lb1=lb;
+        mb1=mb;
+        ub1=ub;
+        note="No folks have requested beds for today.";
+      });
+    }
   }
+
+
   Column details(String field,num n){
     return Column(
       children: <Widget>[
@@ -96,13 +132,16 @@ class bedavailable extends State<data>{
   Future<void> updates() async{
     var collectonRef = Firestore.instance.collection('beds');
     var doc =await collectonRef.document('details');
-    doc.updateData({
-      "lower_berth":lb1,
-      "middle_berth":mb1,
-      "upper_berth":ub1,
-    });
+    if(lb1!=null && mb1!=null && ub1!=null) {
+      doc.updateData({
+        "lower_berth": lb1,
+        "middle_berth": mb1,
+        "upper_berth": ub1,
+      });
+    }
 
   }
+
 
   Future<bool> updatedata(BuildContext context) {
     return showDialog(
@@ -111,7 +150,9 @@ class bedavailable extends State<data>{
         builder: (BuildContext context) {
           return new AlertDialog(
             title: Text("Update bed details"),
-            content: Column(
+            content: Container(
+              height: 300,
+              child:Column(
               children: <Widget>[
                     Column(
                     children: <Widget>[
@@ -165,10 +206,12 @@ class bedavailable extends State<data>{
                     this.mb1=num.tryParse(Value);
                     },
                     ),
+                    SizedBox(height:10),
                     Text('Note:Even individual fields can be updated.')
                     ],
                     )
               ],
+            ),
             ),
             contentPadding: EdgeInsets.all(10.0),
             actions: <Widget>[
@@ -194,101 +237,107 @@ class bedavailable extends State<data>{
   }
 
 
+
   @override
   void initState(){
     super.initState();
+    requests();
     bedData();
   }
-
 
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: <Widget>[
-          Container(
+      body: Scrollbar(
+          child:SingleChildScrollView(
+          child:Padding(
+          padding: EdgeInsets.all(18),
+            child: Column(
+            children: <Widget>[
+            Container(
             padding: EdgeInsets.all(17),
-            height: 250,
+            height: 290,
             alignment: Alignment.topCenter,
             child: Material(
-              elevation: 100,
-              color:  Colors.white70,
-              child: Column(
-                children: <Widget>[
-                  Text('Available bed details',
-                    style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 19
-                    ),),
-                  SizedBox(height: 5,),
-                  Text('total available beds :$count',
-                      style:TextStyle(
-                          color:Colors.black,
-                          fontSize: 16
-                      )),
-                  SizedBox(height: 5,),
-                  Row(
-                    children: <Widget>[
-                      Expanded(child:details("Lower berth",lb)),
-                      Expanded(child:details("Middle berth", mb)),
-                      Expanded(child:details("Upper berth", ub)),
-                    ],
-                  ),
-                  SizedBox(height: 9,),
-                  SizedBox(width: double.infinity,height: 2,
-                    child: Container(
-                      color: Colors.black,
-                    ),),
-                  SizedBox(height: 9,),
-                  Text('Bed requests data',
-                      style:TextStyle(
-                          color:Colors.black,
-                          fontSize: 19
-                      )),
-                  SizedBox(height: 5,),
-                  Text('total Bed requests :$totalr',
-                      style:TextStyle(
-                          color:Colors.black,
-                          fontSize: 16
-                      )),
-                  SizedBox(height: 5,),
-                  Row(
-                    children: <Widget>[
-                      Expanded(child:details("Lower berth",rlb)),
-                      Expanded(child:details("Middle berth", rmb)),
-                      Expanded(child:details("Upper berth", rub)),
-                    ],
-                  ),
-                ],
-              ),
-              shape: RoundedRectangleBorder(borderRadius:BorderRadius.circular(35)),
-            ),
-          ),
-          SizedBox(height: 20,),
-          Container(
-            padding: EdgeInsets.all(16),
-            child: Text(note,
+            elevation: 100,
+            color:  Colors.white70,
+            child: Column(
+            children: <Widget>[
+            Text('Available bed details',
             style: TextStyle(
-                fontSize: 19
-            ),)  
-            ,),
-          SizedBox(height: 20,),
-          MaterialButton(
-            padding: EdgeInsets.all(18),
-            child: Text('Update data',
-              style: TextStyle(
-                color: Colors.white,
-              ),),
-            color: Colors.green[900],
-            shape: new RoundedRectangleBorder(side:BorderSide( width: 3,
-                style: BorderStyle.solid),borderRadius:BorderRadius.circular(20)),
-            onPressed: (){
-              updatedata(context);
-            },
-          )
-        ],
-      ),
+            color: Colors.black,
+            fontSize: 19
+            ),),
+            SizedBox(height: 5,),
+            Text('total available beds :$count',
+            style:TextStyle(
+            color:Colors.black,
+    fontSize: 16
+    )),
+    SizedBox(height: 5,),
+    Row(
+    children: <Widget>[
+    Expanded(child:details("Lower berth",lb)),
+    Expanded(child:details("Middle berth", mb)),
+    Expanded(child:details("Upper berth", ub)),
+    ],
+    ),
+    SizedBox(height: 9,),
+    SizedBox(width: double.infinity,height: 2,
+    child: Container(
+    color: Colors.black,
+    ),),
+    SizedBox(height: 9,),
+    Text('Bed requests data',
+    style:TextStyle(
+    color:Colors.black,
+    fontSize: 19
+    )),
+    SizedBox(height: 5,),
+    Text('total Bed requests :$totalr',
+    style:TextStyle(
+    color:Colors.black,
+    fontSize: 16
+    )),
+    SizedBox(height: 5,),
+    Row(
+    children: <Widget>[
+    Expanded(child:details("Lower berth",rlb)),
+    Expanded(child:details("Middle berth", rmb)),
+    Expanded(child:details("Upper berth", rub)),
+    ],
+    ),
+    ],
+    ),
+    shape: RoundedRectangleBorder(borderRadius:BorderRadius.circular(35)),
+    ),
+    ),
+    SizedBox(height: 20,),
+    Container(
+    padding: EdgeInsets.all(16),
+    child: Text(note,
+    style: TextStyle(
+    fontSize: 19
+    ),)
+    ,),
+    SizedBox(height: 20,),
+    MaterialButton(
+    padding: EdgeInsets.all(18),
+    child: Text('Update data',
+    style: TextStyle(
+    color: Colors.white,
+    ),),
+    color: Colors.green[900],
+    shape: new RoundedRectangleBorder(side:BorderSide( width: 3,
+    style: BorderStyle.solid),borderRadius:BorderRadius.circular(20)),
+    onPressed: (){
+    updatedata(context);
+    },
+    )
+    ],
+            ),
+    ),),)
     );
   }
 }
