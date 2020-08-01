@@ -9,7 +9,7 @@ class allocation extends StatefulWidget{
 }
 
 class allocationpage extends State<allocation>{
-  num lb=0,mb=0,ub=0,rlb=0,rmb=0,rub=0,count=0,totalr=0,prob=0;
+  num lb=0,mb=0,ub=0,rlb=0,rmb=0,rub=0,count=0,totalr=0,prob=0,allocs=0,alb=0,amb=0,aub=0;
   bool flag=false;
   String note="",note1="";
   static DateTime now = DateTime.now();
@@ -32,11 +32,115 @@ class allocationpage extends State<allocation>{
     });
   }
 
-  Future<num> allocaterequests() async {
-    Navigator.of(context).pop();
+  Future<num> allocater(String berth,String no,String reqid,String docid) async {
+    num temp;
+    if(berth=="LOWER_BERTH"){
+      setState(() {
+        alb++;
+        temp=alb;
+        if(lb>0) {
+          rlb--;
+          lb--;
+        }
+      });
+    }
+    else if(berth=="MIDDLE_BERTH"){
+      setState(() {
+        amb++;
+        temp=amb;
+        if(mb>0) {
+          rmb--;
+          mb--;
+        }
+      });
+    }
+    else{
+      setState(() {
+        aub++;
+        temp=aub;
+        if(mb>0) {
+          rub--;
+          ub--;
+        }
+      });
+    }
+          await Firestore.instance.collection('users').document(no).
+          collection('history').document(reqid).updateData({
+            "status": "Bed allocated",
+            "allocated": "$berth-$temp"
+          }).then((value) async {
+            await Firestore.instance.collection('requests').document(today).
+            collection('allrequests').document(docid).updateData({
+              "status": "Bed allocated",
+              "allocated": "$berth-$temp"
+            });
+          });
   }
 
-  Future<num> deletedrequests() async {
+
+
+  Future<num> allocaterequests() async {
+    var db = Firestore.instance.collection('requests').document(today).collection('allrequests');
+    var docu= await db.where('status',isEqualTo: "Waiting for approval").getDocuments();
+    if(docu!=null) {
+      docu.documents.forEach((element) async {
+        if (element.data['preferred_berth'] == "LOWER_BERTH" && rlb <= lb && lb!=0) {
+          await allocater("LOWER_BERTH", element.data['Mobile_Number'],
+              element.data['reqid'], element.documentID);
+        }
+        else
+        if (element.data['preferred_berth'] == "MIDDLE_BERTH" && rmb <= mb && mb!=0) {
+          await allocater("MIDDLE_BERTH", element.data['Mobile_Number'],
+              element.data['reqid'], element.documentID);
+        }
+        else
+        if (element.data['preferred_berth'] == "UPPER_BERTH" && rub <= ub && ub!=0) {
+          await allocater("UPPER_BERTH", element.data['Mobile_Number'],
+              element.data['reqid'], element.documentID);
+        }
+        else {
+          if (lb > 0) {
+            await allocater("LOWER_BERTH", element.data['Mobile_Number'],
+                element.data['reqid'], element.documentID);
+          }
+          else if (mb > 0) {
+            await allocater("MIDDLE_BERTH", element.data['Mobile_Number'],
+                element.data['reqid'], element.documentID);
+          }
+          else if (ub > 0) {
+            await allocater("UPPER_BERTH", element.data['Mobile_Number'],
+                element.data['reqid'], element.documentID);
+          }
+          else {
+            deleterequests("No beds available, Currently");
+          }
+        }
+      });
+      var collectonRef = Firestore.instance.collection('beds');
+      var doc = await collectonRef.document('details');
+      doc.updateData({
+        "lower_berth": lb,
+        "middle_berth": mb,
+        "upper_berth": ub
+      });
+      noreqs("Beds allocated successfully.");
+    }
+    else{
+      noreqs("No requests, To allocated bed.");
+    }
+  }
+
+//  await Firestore.instance.collection('users').document(
+//  element.data['Mobile_Number']).
+//  collection('history').document(element.data['reqid']).updateData({
+//  "allocated": "Request declined(shortage of beds)"
+//  }).then((value) async {
+//  await Firestore.instance.collection('requests').document(today).
+//  collection('allrequests').document(element.documentID).delete();
+//});
+
+
+  Future<num> deleterequests(String status) async {
     var db = Firestore.instance.collection('requests').document(today).collection('allrequests');
     var docu= await db.where('status',isEqualTo: "Waiting for approval").getDocuments();
     if(docu!=null) {
@@ -44,37 +148,59 @@ class allocationpage extends State<allocation>{
         await Firestore.instance.collection('users').document(
             element.data['Mobile_Number']).
         collection('history').document(element.data['reqid']).updateData({
-          "status": "Request was declined",
-          "allocated": "No bed was allocated"
+          "status":status,
+          "allocated":"No bed was allocated"
         }).then((value) async {
           await Firestore.instance.collection('requests').document(today).
           collection('allrequests').document(element.documentID).delete();
         });
       });
+      noreqs("Request declined, Successfully.");
     }
     else{
-      Navigator.of(context).pop();
-      Scaffold.of(context).showSnackBar(SnackBar(
-        content: Text("Attendance Service isn't merged"),
-      ));
+      noreqs("No requests found, To decline.");
     }
 }
-  Future<num> reqcount(String s) async {
+
+
+   void noreqs(String info){
+      Scaffold.of(context).showSnackBar(SnackBar(
+       content: Text(info),
+     ));
+   }
+
+  Future<num> reqcount(String s,String status) async {
     var db = Firestore.instance.collection('requests').document(today).collection('allrequests');
-    var docu= await db.where("preferred_berth",isEqualTo:s).where('status',isEqualTo: "Waiting for approval").getDocuments();
+    var docu= await db.where("preferred_berth",isEqualTo:s).where('status',isEqualTo: status).getDocuments();
     docu.documents.forEach((element) {
         setState(() {
-          if (s == "LOWER_BERTH") {
-            rlb++;
-            totalr++;
+          if (status=="Waiting for approval") {
+            if (s == "LOWER_BERTH") {
+              rlb++;
+              totalr++;
+            }
+            else if (s == "MIDDLE_BERTH") {
+              rmb++;
+              totalr++;
+            }
+            else {
+              rub++;
+              totalr++;
+            }
           }
-          else if (s == "MIDDLE_BERTH") {
-            rmb++;
-            totalr++;
-          }
-          else {
-            rub++;
-            totalr++;
+          else{
+            if (s == "LOWER_BERTH") {
+              alb++;
+              allocs++;
+            }
+            else if (s == "MIDDLE_BERTH") {
+              amb++;
+              allocs++;
+            }
+            else {
+              aub++;
+              allocs++;
+            }
           }
         });
     });
@@ -89,9 +215,12 @@ class allocationpage extends State<allocation>{
         mb=doc.data['middle_berth'];
         ub=doc.data['upper_berth'];
         count=lb+mb+ub;
-        await reqcount("LOWER_BERTH");
-        await reqcount("MIDDLE_BERTH");
-        await reqcount("UPPER_BERTH");
+        await reqcount("LOWER_BERTH","Waiting for approval");
+        await reqcount("MIDDLE_BERTH","Waiting for approval");
+        await reqcount("UPPER_BERTH","Waiting for approval");
+        await reqcount("LOWER_BERTH","Bed allocated");
+        await reqcount("MIDDLE_BERTH","Bed allocated");
+        await reqcount("UPPER_BERTH","Bed allocated");
         if(totalr==0){
           note="There is no requests to allocate beds.";
           note1="There is no requests to decline requests.";
@@ -153,12 +282,13 @@ class allocationpage extends State<allocation>{
                   SizedBox(width: 4,),
                   MaterialButton(
                     child: Text("Yes"),
-                    onPressed: () {
+                    onPressed: () async{
                       if(val){
-
+                          await allocaterequests();
+                          Navigator.of(context).pop();
                       }
                       else{
-                        deletedrequests();
+                        await deleterequests("Request was declined");
                         Navigator.of(context).pop();
                       }
                     },
