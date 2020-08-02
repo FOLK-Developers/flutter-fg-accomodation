@@ -34,7 +34,7 @@ class actionpage extends State<mainpage>{
         iconSize: 20.0,
         items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(icon: Icon(Icons.airline_seat_individual_suite,color: Colors.black,), title: Text('Bed requests',style: TextStyle(color: Colors.black),)),
-          BottomNavigationBarItem(icon: Icon(Icons.assignment,color: Colors.black,), title: Text('bed Availability',style: TextStyle(color: Colors.black),)),
+          BottomNavigationBarItem(icon: Icon(Icons.assignment,color: Colors.black,), title: Text('Bed Availability',style: TextStyle(color: Colors.black),)),
         ],
         currentIndex: selectedIndex,
         fixedColor: Colors.white,

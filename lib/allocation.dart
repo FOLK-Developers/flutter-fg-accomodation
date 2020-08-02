@@ -11,26 +11,21 @@ class allocation extends StatefulWidget{
 class allocationpage extends State<allocation>{
   num lb=0,mb=0,ub=0,rlb=0,rmb=0,rub=0,count=0,totalr=0,prob=0,allocs=0,alb=0,amb=0,aub=0;
   bool flag=false;
-  String note="",note1="";
+  String note="",note1="",req="";
   static DateTime now = DateTime.now();
   static var  formatter = DateFormat('yyyy-MM-dd');
   static var today = formatter.format(now);
 
-  Future<void> requests() async {
-    var col = await Firestore.instance.collection('request').document(today).collection("allrequests");
-    col.getDocuments().then((value) async {
-      if(value.documents.isNotEmpty){
-        setState((){
-          flag=true;
-        });
-      }
-      else{
-        setState(() {
-          flag=false;
-        });
-      }
-    });
-  }
+//  Future<void> requests() async {
+//    var col = await Firestore.instance.collection('request').document(today).collection("allrequests");
+//    col.getDocuments().then((value) async {
+//      if(value.documents.isNotEmpty){
+//        setState((){
+//          flag=true;
+//        });
+//      }
+//    });
+//  }
 
   Future<num> allocater(String berth,String no,String reqid,String docid) async {
     num temp;
@@ -38,30 +33,24 @@ class allocationpage extends State<allocation>{
       setState(() {
         alb++;
         temp=alb;
-        if(lb>0) {
           rlb--;
           lb--;
-        }
       });
     }
     else if(berth=="MIDDLE_BERTH"){
       setState(() {
         amb++;
         temp=amb;
-        if(mb>0) {
           rmb--;
           mb--;
-        }
       });
     }
-    else{
+    else if(berth=="UPPER_BERTH"){
       setState(() {
         aub++;
         temp=aub;
-        if(mb>0) {
           rub--;
           ub--;
-        }
       });
     }
           await Firestore.instance.collection('users').document(no).
@@ -82,7 +71,7 @@ class allocationpage extends State<allocation>{
   Future<num> allocaterequests() async {
     var db = Firestore.instance.collection('requests').document(today).collection('allrequests');
     var docu= await db.where('status',isEqualTo: "Waiting for approval").getDocuments();
-    if(docu!=null) {
+    if(docu!=null && totalr!=0 && count!=0) {
       docu.documents.forEach((element) async {
         if (element.data['preferred_berth'] == "LOWER_BERTH" && rlb <= lb && lb!=0) {
           await allocater("LOWER_BERTH", element.data['Mobile_Number'],
@@ -100,16 +89,16 @@ class allocationpage extends State<allocation>{
         }
         else {
           if (lb > 0) {
-            await allocater("LOWER_BERTH", element.data['Mobile_Number'],
-                element.data['reqid'], element.documentID);
+            await allocater("LOWER_BERTH" , element.data['Mobile_Number'],
+                  element.data['reqid'], element.documentID);
           }
           else if (mb > 0) {
-            await allocater("MIDDLE_BERTH", element.data['Mobile_Number'],
-                element.data['reqid'], element.documentID);
+            await allocater("MIDDLE_BERTH" , element.data['Mobile_Number'],
+                  element.data['reqid'], element.documentID);
           }
           else if (ub > 0) {
-            await allocater("UPPER_BERTH", element.data['Mobile_Number'],
-                element.data['reqid'], element.documentID);
+              await allocater("UPPER_BERTH" , element.data['Mobile_Number'],
+                  element.data['reqid'], element.documentID);
           }
           else {
             deleterequests("No beds available, Currently");
@@ -125,8 +114,11 @@ class allocationpage extends State<allocation>{
       });
       noreqs("Beds allocated successfully.");
     }
+    else if(count==0){
+      noreqs("No beds nor Requests , To allocate bed.");
+    }
     else{
-      noreqs("No requests, To allocated bed.");
+      noreqs("No requests, To allocate bed.");
     }
   }
 
@@ -143,7 +135,7 @@ class allocationpage extends State<allocation>{
   Future<num> deleterequests(String status) async {
     var db = Firestore.instance.collection('requests').document(today).collection('allrequests');
     var docu= await db.where('status',isEqualTo: "Waiting for approval").getDocuments();
-    if(docu!=null) {
+    if(totalr!=0) {
       docu.documents.forEach((element) async {
         await Firestore.instance.collection('users').document(
             element.data['Mobile_Number']).
@@ -155,7 +147,7 @@ class allocationpage extends State<allocation>{
           collection('allrequests').document(element.documentID).delete();
         });
       });
-      noreqs("Request declined, Successfully.");
+      noreqs("Request's declined, Successfully.");
     }
     else{
       noreqs("No requests found, To decline.");
@@ -188,7 +180,7 @@ class allocationpage extends State<allocation>{
               totalr++;
             }
           }
-          else{
+          else if(status=="Bed allocated"){
             if (s == "LOWER_BERTH") {
               alb++;
               allocs++;
@@ -209,7 +201,7 @@ class allocationpage extends State<allocation>{
   Future<void> bedData() async {
     var collectonRef = Firestore.instance.collection('beds');
     var doc =await collectonRef.document('details').get();
-    if(flag) {
+    if(doc.exists) {
       setState(() async {
         lb=doc.data['lower_berth'];
         mb=doc.data['middle_berth'];
@@ -221,14 +213,17 @@ class allocationpage extends State<allocation>{
         await reqcount("LOWER_BERTH","Bed allocated");
         await reqcount("MIDDLE_BERTH","Bed allocated");
         await reqcount("UPPER_BERTH","Bed allocated");
+        if(allocs!=0){
+          req="All request has got beds allocated,For Today";
+        }
         if(totalr==0){
           note="There is no requests to allocate beds.";
           note1="There is no requests to decline requests.";
         }
 
         else if(totalr<=count){
-          note="Do you want allocated beds to all $totalr requests.";
-          note1="Do you want to decline all $totalr requests.";
+          note="Do you want allocated beds to all requests($totalr requests).";
+          note1="Do you want to decline all requests($totalr requests).";
 
         }
         else if(count==0){
@@ -238,7 +233,7 @@ class allocationpage extends State<allocation>{
         }
         else{
           prob=((count/totalr)*100).round();
-          note="Do you want allocated beds to all $totalr requests. Only $prob % ($count requests) of requests will get beds allocated.This For the given"
+          note="Do you want to allocate beds to all $totalr requests. Only $prob % ($count requests) of requests will get beds allocated.This For the given"
               " bed counts"
               " Rest of the request will be cancelled out";
           note1="Do you want to decline to all $totalr requests. $prob % ($count requests) of requests will get beds allocated. If the request is accepted";
@@ -251,8 +246,9 @@ class allocationpage extends State<allocation>{
         mb = doc.data['middle_berth'];
         ub = doc.data['upper_berth'];
         count = lb + mb + ub;
-        note="There is no requests to allocate beds.";
-        note1="There is no requests to decline requests.";
+        note="There is no requests to allocate beds..";
+        note1="There is no requests to decline requests..";
+        req="No, Folk have requested for bed today.";
       });
 
     }
@@ -288,7 +284,7 @@ class allocationpage extends State<allocation>{
                           Navigator.of(context).pop();
                       }
                       else{
-                        await deleterequests("Request was declined");
+                        await deleterequests("Request was declined,By guide.");
                         Navigator.of(context).pop();
                       }
                     },
@@ -305,19 +301,19 @@ class allocationpage extends State<allocation>{
   }
 
   Widget data(){
-    if (flag==true) {
-      return Container(
-          child:Center(
-            child:Text("No folk have requested for bed,Today.",
-              style: TextStyle(
-                  color: Colors.green[900],
-                  fontSize: 15
-              ),) ,
-          )
-      );
+    if (totalr>0) {
+      return requestlist();
     }
     else {
-      return requestlist();
+      return Container(
+        child:Center(
+          child:Text("$req",
+            style: TextStyle(
+                color: Colors.green[900],
+                fontSize: 15
+            ),) ,
+        )
+    );
     }
   }
 
@@ -325,7 +321,7 @@ class allocationpage extends State<allocation>{
   @override
   void initState(){
     super.initState();
-    requests();
+//    requests();
     bedData();
   }
 
@@ -341,6 +337,7 @@ class allocationpage extends State<allocation>{
             color: Colors.white,
             child: Row(
               children: <Widget>[
+                SizedBox(width: 3,),
                 Expanded(
                   child: MaterialButton(
                     child: Text('Decline all',
@@ -348,8 +345,8 @@ class allocationpage extends State<allocation>{
                         color: Colors.black,
                       ),),
                     color: Colors.white,
-                    shape: new RoundedRectangleBorder(side:BorderSide( width: 3,color: Colors.black,
-                        style: BorderStyle.solid),borderRadius:BorderRadius.circular(20)),
+                    shape: new RoundedRectangleBorder(side:BorderSide( width: 1,color: Colors.black,
+                        style: BorderStyle.solid),borderRadius:BorderRadius.circular(3)),
                     onPressed: (){
                       allocate(context,"Declining requests.",note1,false);
                     },
@@ -363,22 +360,23 @@ class allocationpage extends State<allocation>{
                         color: Colors.black,
                       ),),
                     color: Colors.white,
-                    shape: new RoundedRectangleBorder(side:BorderSide( width: 3,color: Colors.black,
-                        style: BorderStyle.solid),borderRadius:BorderRadius.circular(20)),
+                    shape: new RoundedRectangleBorder(side:BorderSide( width: 1,color: Colors.black,
+                        style: BorderStyle.solid),borderRadius:BorderRadius.circular(3)),
                     onPressed: (){
                       allocate(context,"Confirmation for allocation.",note,true);
                     },
                   ) ,
-                )
+                ),
+                SizedBox(width: 3,)
               ],
             ),
           ),
-          SizedBox(
-            height: 1,
-            child: Container(
-              color: Colors.green[900],
-            ),
-          )
+//          SizedBox(
+//            height: 1,
+//            child: Container(
+//              color: Colors.green[900],
+//            ),
+//          )
         ],
       ),
     );

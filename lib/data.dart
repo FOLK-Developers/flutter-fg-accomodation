@@ -12,11 +12,11 @@ class data extends StatefulWidget{
 }
 
 class bedavailable extends State<data>{
-  num lb=0,mb=0,ub=0,rlb=0,rmb=0,rub=0,count=0,totalr=0,prob=0;
+  num lb=0,mb=0,ub=0,rlb=0,rmb=0,rub=0,count=0,totalr=0,prob=0,allocs=0,alb=0,amb=0,aub=0;
   num ub1,lb1,mb1;
   Future<num> n;
   bool flag=true;
-  String note="",note1="";
+  String note="",note1="",tallocs="";
   static DateTime now = DateTime.now();
   static var  formatter = DateFormat('yyyy-MM-dd');
   static var today = formatter.format(now);
@@ -42,22 +42,38 @@ class bedavailable extends State<data>{
     });
   }
 
-  Future<num> reqcount(String s) async {
+  Future<num> reqcount(String s,String status) async {
     var db = Firestore.instance.collection('requests').document(today).collection('allrequests');
     var docu= await db.where("preferred_berth",isEqualTo:s).where('status',isEqualTo: "Waiting for approval").getDocuments();
     docu.documents.forEach((element) {
       setState(() {
-        if(s=="LOWER_BERTH"){
-          rlb++;
-          totalr++;
+        if (status=="Waiting for approval") {
+          if (s == "LOWER_BERTH") {
+            rlb++;
+            totalr++;
+          }
+          else if (s == "MIDDLE_BERTH") {
+            rmb++;
+            totalr++;
+          }
+          else {
+            rub++;
+            totalr++;
+          }
         }
-        else if(s=="MIDDLE_BERTH"){
-          rmb++;
-          totalr++;
-        }
-        else{
-          rub++;
-          totalr++;
+        else if(status=="Bed allocated"){
+          if (s == "LOWER_BERTH") {
+            alb++;
+            allocs++;
+          }
+          else if (s == "MIDDLE_BERTH") {
+            amb++;
+            allocs++;
+          }
+          else {
+            aub++;
+            allocs++;
+          }
         }
       });
     });
@@ -75,22 +91,28 @@ class bedavailable extends State<data>{
         mb1=mb;
         ub1=ub;
         count=lb+mb+ub;
-        await reqcount("LOWER_BERTH");
-        await reqcount("MIDDLE_BERTH");
-        await reqcount("UPPER_BERTH");
+        await reqcount("LOWER_BERTH","Waiting for approval");
+        await reqcount("MIDDLE_BERTH","Waiting for approval");
+        await reqcount("UPPER_BERTH","Waiting for approval");
+        await reqcount("LOWER_BERTH","Bed allocated");
+        await reqcount("MIDDLE_BERTH","Bed allocated");
+        await reqcount("UPPER_BERTH","Bed allocated");
         if(totalr==0){
           note="No folks have requested beds for today.";
+        }
+        else if(totalr>0 && count==0){
+          note="There is no beds to allocate.";
         }
         else if(totalr<=count){
           note="Beds available for all the requests.";
         }
         else if(count==0){
-          note="There is no beds to allocated.";
+          note="There is no beds to allocate.";
         }
         else{
           prob=((count/totalr)*100).round();
           note="Beds available for only $prob %"
-              "($totalr requests) of requests.";
+              "($count requests) of requests.";
         }
       });
     }
@@ -260,7 +282,7 @@ class bedavailable extends State<data>{
             height: 290,
             alignment: Alignment.topCenter,
             child: Material(
-            elevation: 100,
+            elevation: 40,
             color:  Colors.white70,
             child: Column(
             children: <Widget>[
@@ -318,7 +340,7 @@ class bedavailable extends State<data>{
     padding: EdgeInsets.all(16),
     child: Text(note,
     style: TextStyle(
-    fontSize: 19
+    fontSize: 16
     ),)
     ,),
     SizedBox(height: 20,),
