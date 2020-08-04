@@ -53,7 +53,7 @@ class authentication extends State<myapp> {
                 },
               )
             ],
-          ),
+          ), 
         ),
       );
   }
