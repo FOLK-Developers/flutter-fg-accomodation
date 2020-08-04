@@ -1,8 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:intl/intl.dart';
+import 'package:spinner/spinner.dart';
 class allocation extends StatefulWidget{
   @override
   allocationpage createState()=>allocationpage();
@@ -19,29 +23,33 @@ class allocationpage extends State<allocation>{
 
   Future<num> allocater(String berth,String no,String reqid,String docid) async {
     num temp;
+    num type;
     if(berth=="LOWER_BERTH"){
-      setState(() {
+//      setState(() {
         alb++;
         temp=alb;
+        type=1;
           rlb--;
           lb--;
-      });
+//      });
     }
     else if(berth=="MIDDLE_BERTH"){
-      setState(() {
+//      setState(() {
         amb++;
         temp=amb;
+        type=2;
           rmb--;
           mb--;
-      });
+//      });
     }
     else if(berth=="UPPER_BERTH"){
-      setState(() {
+//      setState(() {
         aub++;
         temp=aub;
+        type=3;
           rub--;
           ub--;
-      });
+//      });
     }
           await Firestore.instance.collection('users').document(no).
           collection('history').document(reqid).updateData({
@@ -51,7 +59,8 @@ class allocationpage extends State<allocation>{
             await Firestore.instance.collection('requests').document(today).
             collection('allrequests').document(docid).updateData({
               "status": "Bed allocated",
-              "allocated": "$berth-$temp"
+              "allocated": "$berth-$temp",
+              "type":type
             });
           });
   }
@@ -100,7 +109,7 @@ class allocationpage extends State<allocation>{
              if(reqdocs.documents.isNotEmpty) {
                reqdocs.documents.forEach((requests) async{
 
-                 if(requests.data['preferred_berth']=='LOWER_BERTH' && Beddoc.data['lower_berth']!=0) {
+                 if(requests.data['preferred_berth']=='LOWER_BERTH' && Beddoc.data['lower_berth']>0){
                    num alloclb;
                    allocatelb.documents.forEach((lowerberth) async {
                      alloclb++;
@@ -120,7 +129,7 @@ class allocationpage extends State<allocation>{
                        ,'middle_berth',Beddoc.data['middle_berth']-1,2);
                  }
 
-                 else if(requests.data['preferred_berth']=='UPPER_BERTH' && Beddoc.data['upper_berth']!=0) {
+                 else if(requests.data['preferred_berth']=='UPPER_BERTH' && Beddoc.data['upper_berth']>0) {
                    num allocub;
                    allocateub.documents.forEach((upperberth) async {
                      allocub++;
@@ -165,8 +174,8 @@ class allocationpage extends State<allocation>{
                            deleterequests("No beds available, Currently");
                          }
                  }
+                 noreqs("Beds, Allocated Successfully.");
                });
-               noreqs("Beds, Allocated Successfully.");
              }
             else {
                  //No requests to allocate beds.
@@ -271,17 +280,18 @@ class allocationpage extends State<allocation>{
         ));
       }
 
-      Future<num> reqcount(String field,String s,String status) async {
+      Future<num> reqcount(String berth,String status,num n) async {
+
+      if(status=="Waiting for approval"){
         var db = Firestore.instance.collection('requests').document(today).collection('allrequests');
-        var docu= await db.where(field,isEqualTo:s).where('status',isEqualTo: status).getDocuments();
+        var docu= await db.where('status',isEqualTo: status).getDocuments();
         docu.documents.forEach((element) {
           setState(() {
-            if (status=="Waiting for approval") {
-              if (s == "LOWER_BERTH") {
+              if (berth == "LOWER_BERTH") {
                 rlb++;
                 totalr++;
               }
-              else if (s == "MIDDLE_BERTH") {
+              else if (berth == "MIDDLE_BERTH") {
                 rmb++;
                 totalr++;
               }
@@ -289,24 +299,30 @@ class allocationpage extends State<allocation>{
                 rub++;
                 totalr++;
               }
+            });
+          });
+      }
+      else{
+        var db = Firestore.instance.collection('requests').document(today).collection('allrequests');
+        var doc= await db.where('status',isEqualTo: status).where('type',isEqualTo: n).getDocuments();
+        doc.documents.forEach((element) {
+          setState(() {
+            if (berth == "LOWER_BERTH") {
+              alb++;
+              allocs++;
+            }
+            else if (berth == "MIDDLE_BERTH") {
+              amb++;
+              allocs++;
             }
             else {
-              if (s == "LOWER_BERTH") {
-                alb++;
-                allocs++;
-              }
-              else if (s == "MIDDLE_BERTH") {
-                amb++;
-                allocs++;
-              }
-              else {
-                aub++;
-                allocs++;
-              }
+              aub++;
+              allocs++;
             }
           });
         });
       }
+  }
 
       Future<void> bedData() async {
         var collectonRef = Firestore.instance.collection('beds');
@@ -317,12 +333,12 @@ class allocationpage extends State<allocation>{
             mb=doc.data['middle_berth'];
             ub=doc.data['upper_berth'];
             count=lb+mb+ub;
-            await reqcount("preferred_berth","LOWER_BERTH","Waiting for approval");
-            await reqcount("preferred_berth","MIDDLE_BERTH","Waiting for approval");
-            await reqcount("preferred_berth","UPPER_BERTH","Waiting for approval");
-            await reqcount("allocated","LOWER_BERTH","Bed allocated");
-            await reqcount("allocated","MIDDLE_BERTH","Bed allocated");
-            await reqcount("allocated","UPPER_BERTH","Bed allocated");
+            await reqcount("Waiting for approval","LOWER_BERTH",0);
+            await reqcount("Waiting for approval","MIDDLE_BERTH",0);
+            await reqcount("Waiting for approval","UPPER_BERTH",0);
+            await reqcount("Bed allocated","LOWER_BERTH",1);
+            await reqcount("Bed allocated","MIDDLE_BERTH",2);
+            await reqcount("Bed allocated","UPPER_BERTH",3);
             if(allocs!=0){
               req="All request has got beds allocated,For Today";
             }
@@ -330,7 +346,6 @@ class allocationpage extends State<allocation>{
               note="There is no requests to allocate beds.";
               note1="There is no requests to decline requests.";
             }
-
             else if(totalr<=count){
               note="Do you want allocated beds to all requests($totalr requests).";
               note1="Do you want to decline all requests($totalr requests).";
@@ -339,7 +354,10 @@ class allocationpage extends State<allocation>{
             else if(count==0){
               note="There is no beds to allocated.";
               note1="There is no beds to allocated.";
-
+            }
+            else if(count==0 && totalr==0){
+              note="There is no beds nor requests to allocate.";
+              note1="There is no beds nor requests to allocate.";
             }
             else{
               prob=((count/totalr)*100).round();
@@ -363,6 +381,7 @@ class allocationpage extends State<allocation>{
 
         }
       }
+
       Future<bool> allocate(BuildContext context,String field,String text,bool val) {
         return showDialog(
             context: context,
@@ -390,7 +409,7 @@ class allocationpage extends State<allocation>{
                         child: Text("Yes"),
                         onPressed: () async{
                           if(val){
-                            await allocater2();
+                            await allocaterequests();
                             Navigator.of(context).pop();
                           }
                           else{
@@ -427,68 +446,83 @@ class allocationpage extends State<allocation>{
         }
       }
 
+//        @override
+//        void onLoading() {
+//          showDialog(
+//            context: context,
+//            barrierDismissible: false,
+//            builder: (BuildContext context) {
+//              return Dialog(
+//                child: new Row(
+//                  mainAxisSize: MainAxisSize.min,
+//                  children: [
+//                    new CircularProgressIndicator(),
+//                    new Text("Loading"),
+//                  ],
+//                ),
+//              );
+//            },
+//          );
+//          new Future.delayed(new Duration(seconds: 5), () {
+//            Navigator.pop(context); //pop dialog
+//            build(context);
+//          });
+//        }
 
       @override
       void initState(){
-        super.initState();
-//    requests();
-        bedData();
+      super.initState();
+       bedData();
       }
 
       @override
-      Widget build(BuildContext context) {
-        return Scaffold(
-          body: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              Expanded(child:data()),
-              Container(
-                height: 60,
-                color: Colors.white,
-                child: Row(
+      Widget build(BuildContext context)
+      {
+        return  Scaffold(body:Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
-                    SizedBox(width: 3,),
-                    Expanded(
-                      child: MaterialButton(
-                        child: Text('Decline all',
-                          style: TextStyle(
-                            color: Colors.black,
-                          ),),
-                        color: Colors.white,
-                        shape: new RoundedRectangleBorder(side:BorderSide( width: 1,color: Colors.black,
-                            style: BorderStyle.solid),borderRadius:BorderRadius.circular(3)),
-                        onPressed: (){
-                          allocate(context,"Declining requests.",note1,false);
-                        },
-                      ) ,
+                    Expanded(child:data()),
+                    Container(
+                      height: 60,
+                      color: Colors.white,
+                      child: Row(
+                        children: <Widget>[
+                          SizedBox(width: 3,),
+                          Expanded(
+                            child: MaterialButton(
+                              child: Text('Decline all',
+                                style: TextStyle(
+                                  color: Colors.black,
+                                ),),
+                              color: Colors.white,
+                              shape: new RoundedRectangleBorder(side:BorderSide( width: 1,color: Colors.black,
+                                  style: BorderStyle.solid),borderRadius:BorderRadius.circular(3)),
+                              onPressed: (){
+                                allocate(context,"Declining requests.",note1,false);
+                              },
+                            ) ,
+                          ),
+                          SizedBox(width: 5,),
+                          Expanded(
+                            child: MaterialButton(
+                              child: Text('Accept all',
+                                style: TextStyle(
+                                  color: Colors.black,
+                                ),),
+                              color: Colors.white,
+                              shape: new RoundedRectangleBorder(side:BorderSide( width: 1,color: Colors.black,
+                                  style: BorderStyle.solid),borderRadius:BorderRadius.circular(3)),
+                              onPressed: (){
+                                allocate(context,"Confirmation for allocation.",note,true);
+                              },
+                            ) ,
+                          ),
+                          SizedBox(width: 3,)
+                        ],
+                      ),
                     ),
-                    SizedBox(width: 5,),
-                    Expanded(
-                      child: MaterialButton(
-                        child: Text('Accept all',
-                          style: TextStyle(
-                            color: Colors.black,
-                          ),),
-                        color: Colors.white,
-                        shape: new RoundedRectangleBorder(side:BorderSide( width: 1,color: Colors.black,
-                            style: BorderStyle.solid),borderRadius:BorderRadius.circular(3)),
-                        onPressed: (){
-                          allocate(context,"Confirmation for allocation.",note,true);
-                        },
-                      ) ,
-                    ),
-                    SizedBox(width: 3,)
                   ],
-                ),
-              ),
-//          SizedBox(
-//            height: 1,
-//            child: Container(
-//              color: Colors.green[900],
-//            ),
-//          )
-            ],
-          ),
+                )
         );
       }
     }
@@ -599,3 +633,6 @@ class requestlist extends StatelessWidget{
 //)
 //);
 //}).toList(),
+
+
+
