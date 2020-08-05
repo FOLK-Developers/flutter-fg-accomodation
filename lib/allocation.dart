@@ -443,7 +443,7 @@ class allocationpage extends State<allocation>{
                       MaterialButton(
                         child: Text("Yes"),
                         onPressed: () async{
-                          if(val){
+                          if(val==true){
                               await allocaterequests();
                               Navigator.of(context).pop();
                             }
