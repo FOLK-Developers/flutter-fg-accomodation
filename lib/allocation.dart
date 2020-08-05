@@ -199,7 +199,7 @@ class allocationpage extends State<allocation>{
 
   Future<num> allocaterequests() async {
         var db = Firestore.instance.collection('requests').document(today).collection('allrequests');
-        var docu= await db.where('status',isEqualTo: "Waiting for approval").orderBy("rtime",descending:false).getDocuments();
+        var docu= await db.where('status',isEqualTo: "Waiting for approval").getDocuments();
         if(docu!=null && totalr!=0 && count!=0 ) {
 //    && totalr<=count
           docu.documents.forEach((element) async {
@@ -305,8 +305,6 @@ class allocationpage extends State<allocation>{
           noreqs("No requests found, To decline.");
         }
       }
-
-
       void noreqs(String info){
         Scaffold.of(context).showSnackBar(SnackBar(
           content: Text(info),
@@ -390,7 +388,7 @@ class allocationpage extends State<allocation>{
             }
             else if(count==0){
               note="There is no beds to allocate.";
-              note1="There is no beds to allocate. And to you want to decline all requests.";
+              note1="There is no beds to allocate. And do you want to decline all requests.";
             }
             else if(count==0 && totalr==0){
               note="There is no beds nor requests to allocate.";
@@ -445,18 +443,15 @@ class allocationpage extends State<allocation>{
                       MaterialButton(
                         child: Text("Yes"),
                         onPressed: () async{
-                          if(val==true && note!="Loading.."){
-                            await allocaterequests();
-                            Navigator.of(context).pop();
-                          }
-                          else if(val==false && note!="Loading.."){
-                            await deleterequests("Request was declined,By guide.");
-                            Navigator.of(context).pop();
-                          }
-                          else{
-                            noreqs("Please wait, Loading.");
-                          }
-                        },
+                          if(val){
+                              await allocaterequests();
+                              Navigator.of(context).pop();
+                            }
+                          else {
+                              await deleterequests("Request was declined,By guide.");
+                              Navigator.of(context).pop();
+                            }
+                          },
                         padding: EdgeInsets.all(9),
                         color: Colors.green[900],
                         shape: new RoundedRectangleBorder(side:BorderSide( width: 3,
