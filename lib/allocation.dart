@@ -67,130 +67,130 @@ class allocationpage extends State<allocation>{
 
 
 
+//
+//  Future<void> bedupdater(String reqid,String berth,String docid,String no,String tbc,num count,num type) async {
+//            await Firestore.instance.collection('users').document(no).
+//            collection('history').document(reqid).updateData({
+//              "status": "Bed allocated",
+//              "allocated": "$berth",
+//              "type": "$type"
+//            }).then((value) async {
+//              await Firestore.instance.collection('requests').document(today).
+//              collection('allrequests').document(docid).updateData({
+//                "status": "Bed allocated",
+//                "allocated": "$berth"
+//              });
+//            }).then((value)  async{
+//              var collectonRef = Firestore.instance.collection('beds');
+//              var doc = await collectonRef.document('details');
+//              doc.updateData({
+//                "$tbc": count,
+//              });
+//            });
+//  }
 
-  Future<void> bedupdater(String reqid,String berth,String docid,String no,String tbc,num count,num type) async {
-            await Firestore.instance.collection('users').document(no).
-            collection('history').document(reqid).updateData({
-              "status": "Bed allocated",
-              "allocated": "$berth",
-              "type": "$type"
-            }).then((value) async {
-              await Firestore.instance.collection('requests').document(today).
-              collection('allrequests').document(docid).updateData({
-                "status": "Bed allocated",
-                "allocated": "$berth"
-              });
-            }).then((value)  async{
-              var collectonRef = Firestore.instance.collection('beds');
-              var doc = await collectonRef.document('details');
-              doc.updateData({
-                "$tbc": count,
-              });
-            });
-  }
 
 
-
-  Future<void> allocater2() async{
-
-    var collectionRef = Firestore.instance.collection('beds');
-    var Beddoc = await collectionRef.document('details').get();
-    num tempbc = await Beddoc.data['lower_berth']+Beddoc.data['lower_berth']+Beddoc.data['lower_berth'];
-    var db = Firestore.instance.collection('requests').document(today).collection('allrequests');
-    var reqdocs= await db.where('status',isEqualTo: "Waiting for approval").getDocuments();
-
-    if(tempbc!=0) {
-      //check for request, If request exists allocated bed to them.
-
-             var allocatelb= await db.where('status',isEqualTo: "Bed allocated").where("type",isEqualTo: 1).getDocuments();
-             var allocatemb= await db.where('status',isEqualTo: "Bed allocated").where("type",isEqualTo: 2).getDocuments();
-             var allocateub= await db.where('status',isEqualTo: "Bed allocated").where("type",isEqualTo: 3).getDocuments();
-
-             if(reqdocs.documents.isNotEmpty) {
-               reqdocs.documents.forEach((requests) async{
-
-                 if(requests.data['preferred_berth']=='LOWER_BERTH' && Beddoc.data['lower_berth']>0){
-                   num alloclb;
-                   allocatelb.documents.forEach((lowerberth) async {
-                     alloclb++;
-                   });
-                   alloclb++;
-                   await bedupdater(requests.data['reqid'],"LOWERBERTH-$alloclb",requests.documentID,requests.data['Mobile_Number'],
-                   "lower_berth",Beddoc.data['lower_berth']-1,1);
-                 }
-
-                 else if(requests.data['preferred_berth']=='MIDDLE_BERTH' && Beddoc.data['middle_berth']>0) {
-                   num allocmb;
-                   allocatemb.documents.forEach((middleberth) async {
-                     allocmb++;
-                   });
-                   allocmb++;
-                   await bedupdater(requests.data['reqid'],"MIDDLEBERTH-$allocmb",requests.documentID,requests.data['Mobile_Number']
-                       ,'middle_berth',Beddoc.data['middle_berth']-1,2);
-                 }
-
-                 else if(requests.data['preferred_berth']=='UPPER_BERTH' && Beddoc.data['upper_berth']>0) {
-                   num allocub;
-                   allocateub.documents.forEach((upperberth) async {
-                     allocub++;
-                   });
-                   allocub++;
-                   await bedupdater(requests.data['reqid'],"UPPERBERTH-$allocub",requests.documentID,requests.data['Mobile_Number']
-                   ,'upper_berth', Beddoc.data['upper_berth']-1,3);
-                 }
-
-                 else {
-                         if(Beddoc.data['upper_berth']>0) {
-                           num allocllb;
-                           allocatelb.documents.forEach((lowerberth) async {
-                             allocllb++;
-                           });
-                           allocllb++;
-                           await bedupdater(requests.data['reqid'],"LOWERBERTH-$allocllb",requests.documentID,requests.data['Mobile_Number'],
-                               "lower_berth",Beddoc.data['lower_berth']-1,1);
-                         }
-
-                         else if(Beddoc.data['middle_berth']>0) {
-                           num alloclmb;
-                           allocatemb.documents.forEach((middleberth) async {
-                             alloclmb++;
-                           });
-                           alloclmb++;
-                           await bedupdater(requests.data['reqid'],"MIDDLEBERTH-$alloclmb",requests.documentID,requests.data['Mobile_Number']
-                               ,'middle_berth',Beddoc.data['middle_berth']-1,2);
-                         }
-
-                         else if(Beddoc.data['upper_berth']!=0) {
-                           num alloclub;
-                           allocateub.documents.forEach((upperberth) async {
-                             alloclub++;
-                           });
-                           alloclub++;
-                           await bedupdater(requests.data['reqid'],"UPPERBERTH-$alloclub",requests.documentID,requests.data['Mobile_Number']
-                               ,'upper_berth', Beddoc.data['upper_berth']-1,3);
-                         }
-                         else {
-                           //decline requests, Status No beds vacant, Currently
-                           deleterequests("No beds available, Currently");
-                         }
-                 }
-                 noreqs("Beds, Allocated Successfully.");
-               });
-             }
-            else {
-                 //No requests to allocate beds.
-               noreqs("No requests, To allocate bed.");
-            }
-    }
-    else if(reqdocs.documents.isEmpty){
-      //There is no requests
-      noreqs("No requests,To allocate beds.");
-    }
-    else {
-      //decline requests, Status No beds vacant, Currently
-      noreqs("No beds,To allocated beds.");
-    }
-  }
+//  Future<void> allocater2() async{
+//
+//    var collectionRef = Firestore.instance.collection('beds');
+//    var Beddoc = await collectionRef.document('details').get();
+//    num tempbc = await Beddoc.data['lower_berth']+Beddoc.data['lower_berth']+Beddoc.data['lower_berth'];
+//    var db = Firestore.instance.collection('requests').document(today).collection('allrequests');
+//    var reqdocs= await db.where('status',isEqualTo: "Waiting for approval").getDocuments();
+//
+//    if(tempbc!=0) {
+//      //check for request, If request exists allocated bed to them.
+//
+//             var allocatelb= await db.where('status',isEqualTo: "Bed allocated").where("type",isEqualTo: 1).getDocuments();
+//             var allocatemb= await db.where('status',isEqualTo: "Bed allocated").where("type",isEqualTo: 2).getDocuments();
+//             var allocateub= await db.where('status',isEqualTo: "Bed allocated").where("type",isEqualTo: 3).getDocuments();
+//
+//             if(reqdocs.documents.isNotEmpty) {
+//               reqdocs.documents.forEach((requests) async{
+//
+//                 if(requests.data['preferred_berth']=='LOWER_BERTH' && Beddoc.data['lower_berth']>0){
+//                   num alloclb;
+//                   allocatelb.documents.forEach((lowerberth) async {
+//                     alloclb++;
+//                   });
+//                   alloclb++;
+//                   await bedupdater(requests.data['reqid'],"LOWERBERTH-$alloclb",requests.documentID,requests.data['Mobile_Number'],
+//                   "lower_berth",Beddoc.data['lower_berth']-1,1);
+//                 }
+//
+//                 else if(requests.data['preferred_berth']=='MIDDLE_BERTH' && Beddoc.data['middle_berth']>0) {
+//                   num allocmb;
+//                   allocatemb.documents.forEach((middleberth) async {
+//                     allocmb++;
+//                   });
+//                   allocmb++;
+//                   await bedupdater(requests.data['reqid'],"MIDDLEBERTH-$allocmb",requests.documentID,requests.data['Mobile_Number']
+//                       ,'middle_berth',Beddoc.data['middle_berth']-1,2);
+//                 }
+//
+//                 else if(requests.data['preferred_berth']=='UPPER_BERTH' && Beddoc.data['upper_berth']>0) {
+//                   num allocub;
+//                   allocateub.documents.forEach((upperberth) async {
+//                     allocub++;
+//                   });
+//                   allocub++;
+//                   await bedupdater(requests.data['reqid'],"UPPERBERTH-$allocub",requests.documentID,requests.data['Mobile_Number']
+//                   ,'upper_berth', Beddoc.data['upper_berth']-1,3);
+//                 }
+//
+//                 else {
+//                         if(Beddoc.data['upper_berth']>0) {
+//                           num allocllb;
+//                           allocatelb.documents.forEach((lowerberth) async {
+//                             allocllb++;
+//                           });
+//                           allocllb++;
+//                           await bedupdater(requests.data['reqid'],"LOWERBERTH-$allocllb",requests.documentID,requests.data['Mobile_Number'],
+//                               "lower_berth",Beddoc.data['lower_berth']-1,1);
+//                         }
+//
+//                         else if(Beddoc.data['middle_berth']>0) {
+//                           num alloclmb;
+//                           allocatemb.documents.forEach((middleberth) async {
+//                             alloclmb++;
+//                           });
+//                           alloclmb++;
+//                           await bedupdater(requests.data['reqid'],"MIDDLEBERTH-$alloclmb",requests.documentID,requests.data['Mobile_Number']
+//                               ,'middle_berth',Beddoc.data['middle_berth']-1,2);
+//                         }
+//
+//                         else if(Beddoc.data['upper_berth']!=0) {
+//                           num alloclub;
+//                           allocateub.documents.forEach((upperberth) async {
+//                             alloclub++;
+//                           });
+//                           alloclub++;
+//                           await bedupdater(requests.data['reqid'],"UPPERBERTH-$alloclub",requests.documentID,requests.data['Mobile_Number']
+//                               ,'upper_berth', Beddoc.data['upper_berth']-1,3);
+//                         }
+//                         else {
+//                           //decline requests, Status No beds vacant, Currently
+//                           deleterequests("No beds available, Currently");
+//                         }
+//                 }
+//                 noreqs("Beds, Allocated Successfully.");
+//               });
+//             }
+//            else {
+//                 //No requests to allocate beds.
+//               noreqs("No requests, To allocate bed.");
+//            }
+//    }
+//    else if(reqdocs.documents.isEmpty){
+//      //There is no requests
+//      noreqs("No requests,To allocate beds.");
+//    }
+//    else {
+//      //decline requests, Status No beds vacant, Currently
+//      noreqs("No beds,To allocated beds.");
+//    }
+//  }
 
 
 
@@ -200,18 +200,22 @@ class allocationpage extends State<allocation>{
   Future<num> allocaterequests() async {
         var db = Firestore.instance.collection('requests').document(today).collection('allrequests');
         var docu= await db.where('status',isEqualTo: "Waiting for approval").getDocuments();
-        if(docu!=null && totalr!=0 && count!=0) {
+        if(docu!=null && totalr!=0 && count!=0 ) {
+//    && totalr<=count
           docu.documents.forEach((element) async {
-            if (element.data['preferred_berth'] == "LOWER_BERTH" && rlb <= lb && lb!=0) {
+            if (element.data['preferred_berth'] == "LOWER_BERTH"  && lb!=0) {
+//            && rlb <= lb
               await allocater("LOWER_BERTH", element.data['Mobile_Number'],
                   element.data['reqid'], element.documentID);
             }
-            else if (element.data['preferred_berth'] == "MIDDLE_BERTH" && rmb <= mb && mb!=0) {
+            else if (element.data['preferred_berth'] == "MIDDLE_BERTH"  && mb!=0) {
+//            && rmb <= mb
               await allocater("MIDDLE_BERTH", element.data['Mobile_Number'],
                   element.data['reqid'], element.documentID);
             }
-            else if (element.data['preferred_berth'] == "UPPER_BERTH" && rub <= ub && ub!=0) {
-              await allocater("UPPER_BERTH", element.data['Mobile_Number'],
+            else if (element.data['preferred_berth'] == "UPPER_BERTH"&& ub!=0) {
+//            && rub <= ub
+            await allocater("UPPER_BERTH", element.data['Mobile_Number'],
                   element.data['reqid'], element.documentID);
             }
             else {
@@ -223,12 +227,20 @@ class allocationpage extends State<allocation>{
                 await allocater("MIDDLE_BERTH" , element.data['Mobile_Number'],
                     element.data['reqid'], element.documentID);
               }
-              else if (ub>0) {
+              else if (ub>0)
+              {
                 await allocater("UPPER_BERTH" , element.data['Mobile_Number'],
                     element.data['reqid'], element.documentID);
               }
               else {
-                deleterequests("No beds available, Currently");
+//                deleterequests("No beds available, Currently.");
+                await Firestore.instance.collection('users').document(element.data['Mobile_Number']).
+                 collection('history').document(element.data['reqid']).updateData({
+                  "status":"No beds available, Currently",
+                  "allocated":"No bed was allocated"
+                }).then((value){
+                  db.document(element.documentID).delete();
+                });
               }
             }
           });
@@ -241,6 +253,27 @@ class allocationpage extends State<allocation>{
           });
           noreqs("Beds allocated successfully.");
         }
+//        else if(totalr>count && count!=0){
+//          num decline=totalr-count;
+//          num i=0;
+//          var docutodecline= await db.where('status',isEqualTo: "Waiting for approval").orderBy("rtime",descending: true)
+//          .getDocuments();
+//          docutodecline.documents.forEach((element) async {
+//            if(i<=decline){
+//              await Firestore.instance.collection('users').document(element.data['Mobile_Number']).
+//               collection('history').document(element.data['reqid']).updateData({
+//                "status":"No beds available, Currently",
+//                "allocated":"No bed was allocated"
+//              }).then((value){
+//                db.document(element.documentID).delete();
+//              });
+//              i++;
+//            }
+//            else{
+//              allocaterequests();
+//            }
+//          });
+//        }
         else if(count==0){
           noreqs("No beds nor Requests , To allocate bed.");
         }
@@ -284,9 +317,10 @@ class allocationpage extends State<allocation>{
 
       if(status=="Waiting for approval"){
         var db = Firestore.instance.collection('requests').document(today).collection('allrequests');
-        var docu= await db.where('status',isEqualTo: status).getDocuments();
-        docu.documents.forEach((element) {
-          setState(() {
+        var docu= await db.where("preferred_berth",isEqualTo:berth).where('status',isEqualTo: status).getDocuments();
+        if(docu.documents.isNotEmpty) {
+          docu.documents.forEach((element) {
+            setState(() {
               if (berth == "LOWER_BERTH") {
                 rlb++;
                 totalr++;
@@ -294,33 +328,36 @@ class allocationpage extends State<allocation>{
               else if (berth == "MIDDLE_BERTH") {
                 rmb++;
                 totalr++;
-              }
+               }
               else {
                 rub++;
                 totalr++;
               }
             });
           });
+        }
       }
       else{
         var db = Firestore.instance.collection('requests').document(today).collection('allrequests');
         var doc= await db.where('status',isEqualTo: status).where('type',isEqualTo: n).getDocuments();
-        doc.documents.forEach((element) {
-          setState(() {
-            if (berth == "LOWER_BERTH") {
-              alb++;
-              allocs++;
-            }
-            else if (berth == "MIDDLE_BERTH") {
-              amb++;
-              allocs++;
-            }
-            else {
-              aub++;
-              allocs++;
-            }
+        if(doc.documents.isNotEmpty) {
+          doc.documents.forEach((element) {
+            setState(() {
+              if (berth == "LOWER_BERTH") {
+                alb++;
+                allocs++;
+              }
+              else if (berth == "MIDDLE_BERTH") {
+                amb++;
+                allocs++;
+              }
+              else {
+                aub++;
+                allocs++;
+              }
+            });
           });
-        });
+        }
       }
   }
 
@@ -333,12 +370,12 @@ class allocationpage extends State<allocation>{
             mb=doc.data['middle_berth'];
             ub=doc.data['upper_berth'];
             count=lb+mb+ub;
-            await reqcount("Waiting for approval","LOWER_BERTH",0);
-            await reqcount("Waiting for approval","MIDDLE_BERTH",0);
-            await reqcount("Waiting for approval","UPPER_BERTH",0);
-            await reqcount("Bed allocated","LOWER_BERTH",1);
-            await reqcount("Bed allocated","MIDDLE_BERTH",2);
-            await reqcount("Bed allocated","UPPER_BERTH",3);
+            await reqcount("LOWER_BERTH","Waiting for approval",0);
+            await reqcount("MIDDLE_BERTH","Waiting for approval",0);
+            await reqcount("UPPER_BERTH","Waiting for approval",0);
+            await reqcount("LOWER_BERTH","Bed allocated",1);
+            await reqcount("MIDDLE_BERTH","Bed allocated",2);
+            await reqcount("UPPER_BERTH","Bed allocated",3);
             if(allocs!=0){
               req="All request has got beds allocated,For Today";
             }
