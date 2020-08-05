@@ -15,7 +15,7 @@ class allocation extends StatefulWidget{
 class allocationpage extends State<allocation>{
   num lb=0,mb=0,ub=0,rlb=0,rmb=0,rub=0,count=0,totalr=0,prob=0,allocs=0,alb=0,amb=0,aub=0;
   bool flag=false;
-  String note="",note1="",req="";
+  String note="Loading..",note1="Loading..",req="Loading..";
   static DateTime now = DateTime.now();
   static var  formatter = DateFormat('yyyy-MM-dd');
   static var today = formatter.format(now);
@@ -199,7 +199,7 @@ class allocationpage extends State<allocation>{
 
   Future<num> allocaterequests() async {
         var db = Firestore.instance.collection('requests').document(today).collection('allrequests');
-        var docu= await db.where('status',isEqualTo: "Waiting for approval").getDocuments();
+        var docu= await db.where('status',isEqualTo: "Waiting for approval").orderBy("rtime",descending:false).getDocuments();
         if(docu!=null && totalr!=0 && count!=0 ) {
 //    && totalr<=count
           docu.documents.forEach((element) async {
@@ -384,17 +384,17 @@ class allocationpage extends State<allocation>{
               note1="There is no requests to decline requests.";
             }
             else if(totalr<=count){
-              note="Do you want allocated beds to all requests($totalr requests).";
+              note="Do you want allocate beds to all requests($totalr requests).";
               note1="Do you want to decline all requests($totalr requests).";
 
             }
             else if(count==0){
-              note="There is no beds to allocated.";
-              note1="There is no beds to allocated.";
+              note="There is no beds to allocate.";
+              note1="There is no beds to allocate. And to you want to decline all requests.";
             }
             else if(count==0 && totalr==0){
               note="There is no beds nor requests to allocate.";
-              note1="There is no beds nor requests to allocate.";
+              note1="There is no beds nor requests to  Decline.";
             }
             else{
               prob=((count/totalr)*100).round();
@@ -445,13 +445,16 @@ class allocationpage extends State<allocation>{
                       MaterialButton(
                         child: Text("Yes"),
                         onPressed: () async{
-                          if(val){
+                          if(val==true && note!="Loading.."){
                             await allocaterequests();
                             Navigator.of(context).pop();
                           }
-                          else{
+                          else if(val==false && note!="Loading.."){
                             await deleterequests("Request was declined,By guide.");
                             Navigator.of(context).pop();
+                          }
+                          else{
+                            noreqs("Please wait, Loading.");
                           }
                         },
                         padding: EdgeInsets.all(9),
@@ -575,7 +578,7 @@ class requestlist extends StatelessWidget{
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
         stream: Firestore.instance.collection('requests').document(today).
-        collection('allrequests').where('status',isEqualTo: "Waiting for approval").snapshots(),
+        collection('allrequests').where('status',isEqualTo: "Waiting for approval").orderBy("rtime",descending:false).snapshots(),
         builder: (BuildContext context,
             AsyncSnapshot<QuerySnapshot> snapshot) {
           if (snapshot.hasError)
