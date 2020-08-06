@@ -573,7 +573,8 @@ class requestlist extends StatelessWidget{
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
         stream: Firestore.instance.collection('requests').document(today).
-        collection('allrequests').where('status',isEqualTo: "Waiting for approval").orderBy("rtime",descending:false).snapshots(),
+        collection('allrequests').where('status',isEqualTo: "Waiting for approval").
+        snapshots(),
         builder: (BuildContext context,
             AsyncSnapshot<QuerySnapshot> snapshot) {
           if (snapshot.hasError)
