@@ -1,16 +1,23 @@
+import 'dart:ui';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:folkguideapp/allocation.dart';
-
 import 'data.dart';
 
+// ignore: camel_case_types
 class mainpage extends StatefulWidget{
+  mainpage({this.center});
+  final center;
   @override
-  actionpage createState()=>actionpage();
+  actionpage createState()=>actionpage(center:center);
 }
 
 
+// ignore: camel_case_types
 class actionpage extends State<mainpage>{
+  actionpage({this.center});
+  String center;
     int selectedIndex = 0;
     final widgetOptions = [
       allocation(),
@@ -22,8 +29,12 @@ class actionpage extends State<mainpage>{
   Widget build(BuildContext context) {
     return MaterialApp(home: Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.green[900],
-        title: Text('Folk Guide app'),
+        backgroundColor: Colors.white,
+        title: Text('folk guide',
+        style: TextStyle(
+          color: Colors.green[900],
+          fontStyle: FontStyle.italic
+        ),),
       ),
       body: Center(
         child: widgetOptions.elementAt(selectedIndex),
