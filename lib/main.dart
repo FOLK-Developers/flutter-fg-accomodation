@@ -29,12 +29,14 @@ class myapp extends StatefulWidget {
 class authentication extends State<myapp> {
   List<String> centers = [];
   String selectedcenter='Center1';
+
   Future getcenters() async{
     var db = await Firestore.instance.collection('centers').getDocuments();
-    db.documents.forEach((element) {
+    db.documents.forEach((element){
       centers.add(element.documentID.toString());
     });
   }
+
 
   DropdownButton<String> androidDropdown() {
     List<DropdownMenuItem<String>> dropdownItems = [];
@@ -106,17 +108,22 @@ class authentication extends State<myapp> {
                         Expanded(
                           child: Row(
                             children: [
+                              Expanded(
+                                child:SizedBox(width: 3,) ,),
                               Text('Select your center  ',
-                                style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 16
-                                ),),
+                                  style: TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 16
+                                  ),),
                               Container(
                                 width:80,
                                 height:30,
                                 color: Colors.white,
                                 child: Platform.isIOS ? iOSPicker() : androidDropdown(),
                               ),
+                              Expanded(
+                                child:SizedBox(width: 3,)
+                                ,),
                             ],
                           ),
                         )

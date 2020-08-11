@@ -1,9 +1,9 @@
+import 'dart:math';
+import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:intl/intl.dart';
 import 'package:spinner/spinner.dart';
@@ -311,111 +311,111 @@ class allocationpage extends State<allocation>{
         ));
       }
 
-      Future<num> reqcount(String berth,String status,num n) async {
-
-      if(status=="Waiting for approval"){
-        var db = Firestore.instance.collection('requests').document(today).collection('allrequests');
-        var docu= await db.where("preferred_berth",isEqualTo:berth).where('status',isEqualTo: status).getDocuments();
-        if(docu.documents.isNotEmpty) {
-          docu.documents.forEach((element) {
-            setState(() {
-              if (berth == "LOWER_BERTH") {
-                rlb++;
-                totalr++;
-              }
-              else if (berth == "MIDDLE_BERTH") {
-                rmb++;
-                totalr++;
-               }
-              else {
-                rub++;
-                totalr++;
-              }
-            });
-          });
-        }
-      }
-      else{
-        var db = Firestore.instance.collection('requests').document(today).collection('allrequests');
-        var doc= await db.where('status',isEqualTo: status).where('type',isEqualTo: n).getDocuments();
-        if(doc.documents.isNotEmpty) {
-          doc.documents.forEach((element) {
-            setState(() {
-              if (berth == "LOWER_BERTH") {
-                alb++;
-                allocs++;
-              }
-              else if (berth == "MIDDLE_BERTH") {
-                amb++;
-                allocs++;
-              }
-              else {
-                aub++;
-                allocs++;
-              }
-            });
-          });
-        }
-      }
-  }
-
-      Future<void> bedData() async {
-        var collectonRef = Firestore.instance.collection('beds');
-        var doc =await collectonRef.document('details').get();
-        if(doc.exists) {
-          setState(() async {
-            lb=doc.data['lower_berth'];
-            mb=doc.data['middle_berth'];
-            ub=doc.data['upper_berth'];
-            count=lb+mb+ub;
-            await reqcount("LOWER_BERTH","Waiting for approval",0);
-            await reqcount("MIDDLE_BERTH","Waiting for approval",0);
-            await reqcount("UPPER_BERTH","Waiting for approval",0);
-            await reqcount("LOWER_BERTH","Bed allocated",1);
-            await reqcount("MIDDLE_BERTH","Bed allocated",2);
-            await reqcount("UPPER_BERTH","Bed allocated",3);
-            if(allocs!=0){
-              req="All request has got beds allocated,For Today";
-            }
-            if(totalr==0){
-              note="There is no requests to allocate beds.";
-              note1="There is no requests to decline requests.";
-            }
-            else if(totalr<=count){
-              note="Do you want allocate beds to all requests($totalr requests).";
-              note1="Do you want to decline all requests($totalr requests).";
-
-            }
-            else if(count==0){
-              note="There is no beds to allocate.";
-              note1="There is no beds to allocate. And do you want to decline all requests.";
-            }
-            else if(count==0 && totalr==0){
-              note="There is no beds nor requests to allocate.";
-              note1="There is no beds nor requests to  Decline.";
-            }
-            else{
-              prob=((count/totalr)*100).round();
-              note="Do you want to allocate beds to all $totalr requests. Only $prob % ($count requests) of requests will get beds allocated.This For the given"
-                  " bed counts"
-                  " Rest of the request will be cancelled out";
-              note1="Do you want to decline to all $totalr requests. $prob % ($count requests) of requests will get beds allocated. If the request is accepted";
-            }
-          });
-        }
-        else{
-          setState(() async {
-            lb = doc.data['lower_berth'];
-            mb = doc.data['middle_berth'];
-            ub = doc.data['upper_berth'];
-            count = lb + mb + ub;
-            note="There is no requests to allocate beds..";
-            note1="There is no requests to decline requests..";
-            req="No, Folk have requested for bed today.";
-          });
-
-        }
-      }
+//      Future<num> reqcount(String berth,String status,num n) async {
+//
+//      if(status=="Waiting for approval"){
+//        var db = Firestore.instance.collection('requests').document(today).collection('allrequests');
+//        var docu= await db.where("preferred_berth",isEqualTo:berth).where('status',isEqualTo: status).getDocuments();
+//        if(docu.documents.isNotEmpty) {
+//          docu.documents.forEach((element) {
+//            setState(() {
+//              if (berth == "LOWER_BERTH") {
+//                rlb++;
+//                totalr++;
+//              }
+//              else if (berth == "MIDDLE_BERTH") {
+//                rmb++;
+//                totalr++;
+//               }
+//              else {
+//                rub++;
+//                totalr++;
+//              }
+//            });
+//          });
+//        }
+//      }
+//      else{
+//        var db = Firestore.instance.collection('requests').document(today).collection('allrequests');
+//        var doc= await db.where('status',isEqualTo: status).where('type',isEqualTo: n).getDocuments();
+//        if(doc.documents.isNotEmpty) {
+//          doc.documents.forEach((element) {
+//            setState(() {
+//              if (berth == "LOWER_BERTH") {
+//                alb++;
+//                allocs++;
+//              }
+//              else if (berth == "MIDDLE_BERTH") {
+//                amb++;
+//                allocs++;
+//              }
+//              else {
+//                aub++;
+//                allocs++;
+//              }
+//            });
+//          });
+//        }
+//      }
+//  }
+//
+//      Future<void> bedData() async {
+//        var collectonRef = Firestore.instance.collection('beds');
+//        var doc =await collectonRef.document('details').get();
+//        if(doc.exists) {
+//          setState(() async {
+//            lb=doc.data['lower_berth'];
+//            mb=doc.data['middle_berth'];
+//            ub=doc.data['upper_berth'];
+//            count=lb+mb+ub;
+//            await reqcount("LOWER_BERTH","Waiting for approval",0);
+//            await reqcount("MIDDLE_BERTH","Waiting for approval",0);
+//            await reqcount("UPPER_BERTH","Waiting for approval",0);
+//            await reqcount("LOWER_BERTH","Bed allocated",1);
+//            await reqcount("MIDDLE_BERTH","Bed allocated",2);
+//            await reqcount("UPPER_BERTH","Bed allocated",3);
+//            if(allocs!=0){
+//              req="All request has got beds allocated,For Today";
+//            }
+//            if(totalr==0){
+//              note="There is no requests to allocate beds.";
+//              note1="There is no requests to decline requests.";
+//            }
+//            else if(totalr<=count){
+//              note="Do you want allocate beds to all requests($totalr requests).";
+//              note1="Do you want to decline all requests($totalr requests).";
+//
+//            }
+//            else if(count==0){
+//              note="There is no beds to allocate.";
+//              note1="There is no beds to allocate. And do you want to decline all requests.";
+//            }
+//            else if(count==0 && totalr==0){
+//              note="There is no beds nor requests to allocate.";
+//              note1="There is no beds nor requests to  Decline.";
+//            }
+//            else{
+//              prob=((count/totalr)*100).round();
+//              note="Do you want to allocate beds to all $totalr requests. Only $prob % ($count requests) of requests will get beds allocated.This For the given"
+//                  " bed counts"
+//                  " Rest of the request will be cancelled out";
+//              note1="Do you want to decline to all $totalr requests. $prob % ($count requests) of requests will get beds allocated. If the request is accepted";
+//            }
+//          });
+//        }
+//        else{
+//          setState(() async {
+//            lb = doc.data['lower_berth'];
+//            mb = doc.data['middle_berth'];
+//            ub = doc.data['upper_berth'];
+//            count = lb + mb + ub;
+//            note="There is no requests to allocate beds..";
+//            note1="There is no requests to decline requests..";
+//            req="No, Folk have requested for bed today.";
+//          });
+//
+//        }
+//      }
 
       Future<bool> allocate(BuildContext context,String field,String text,bool val) {
         return showDialog(
@@ -507,7 +507,7 @@ class allocationpage extends State<allocation>{
       @override
       void initState(){
       super.initState();
-       bedData();
+//       bedData();
       }
 
       @override
@@ -516,7 +516,7 @@ class allocationpage extends State<allocation>{
         return  Scaffold(body:Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
-                    Expanded(child:data()),
+                    Expanded(child:requestlist()),
                     Container(
                       height: 60,
                       color: Colors.white,
@@ -567,7 +567,11 @@ class requestlist extends StatelessWidget{
   static DateTime now = DateTime.now();
   static var  formatter = DateFormat('yyyy-MM-dd');
   static var today = formatter.format(now);
-
+  List<MaterialColor> colors = [Colors.green,Colors.yellow,Colors.red,
+                               Colors.indigo,Colors.purple,Colors.lightBlue,
+                               Colors.pink,Colors.orange,Colors.cyan,
+                               Colors.teal];
+//  List<String> images = ['']
 
   @override
   Widget build(BuildContext context) {
@@ -588,54 +592,56 @@ class requestlist extends StatelessWidget{
                       actionPane: SlidableDrawerActionPane(),
                       actionExtentRatio: 0.25,
                       child: ListTile(
-                      title: Material(
-                            color: Colors.white70,
-                            child: Padding(
-                            padding: EdgeInsets.all(10),
-                            child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                      title: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
-                            SizedBox(height: 7.0,),
-                            Text("Folk Name :" + document['Folkname'],
-                            style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 16
-                            ),),
-                            SizedBox(height: 7.0,),
-                            Text("Mobile Number:" + document['Mobile_Number'],
-                            style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 16
-                            ),),
-                            SizedBox(height: 7.0,),
-                            Text("Preferred Berth:" +
-                            document['preferred_berth'],
-                            style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 16
-                            ),),
-                            SizedBox(height: 7.0,),
-                            Text("Message to guide:" + document['Message'],
-                            style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 16
-                            ),),
-                            SizedBox(height: 7.0,),
-                            Text("Request status:" + document['status'],
-                            style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 16
-                            ),),
-                            SizedBox(height: 10.0,),
-                            SizedBox(width: double.infinity,
-                            height: 3,
-                            child: Container(
-                            color: Colors.black,
-                            ),)
+                            SizedBox(height:8,),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                Column(
+                                  children: [
+                                    Container(
+                                      alignment: Alignment.topCenter,
+                                      child:CircleAvatar(
+                                        backgroundColor: colors.elementAt(Random().nextInt(10)),
+                                        radius: 25,
+                                      ),
+                                    )
+                                  ],
+                                ),
+                                SizedBox(width: 8,),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(document['Folkname'],
+                                        style: TextStyle(
+                                            color: Colors.black,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold
+                                        ),),
+                                      SizedBox(height: 7.0,),
+                                      Text("Requested "+
+                                          document['preferred_berth'].toString().toLowerCase()
+                                          +" for "+today,
+                                        style: TextStyle(
+                                            color: Colors.black,
+                                            fontSize: 12
+                                        ),),
+                                      Text(document['Message']=='No message'? "" :"Message :" + document['Message'],
+                                        style: TextStyle(
+                                            color: Colors.black,
+                                            fontSize: 15
+                                        ),),
+                                    ],
+                                  ),
+                                )
+                              ],
+                            ),
                             ],
                             ),
-                         ),
-                       ),
                       ),
                   actions: <Widget>[
                     IconSlideAction(
@@ -653,7 +659,23 @@ class requestlist extends StatelessWidget{
                         });
                         },
                     ),
-                  ],);
+                  ],
+                    secondaryActions: <Widget>[
+                      IconSlideAction(
+                        caption: 'Allocate',
+                        color: Colors.green[900],
+                        icon: Icons.priority_high,
+                        onTap: (){
+                          },
+                      ),
+                      IconSlideAction(
+                        caption: 'Forward',
+                        color: Colors.green[700],
+                        icon: Icons.forward,
+                        onTap: (){
+                          },
+                      ),
+                    ],);
             }).toList()
             );
           }

@@ -33,6 +33,7 @@ class actionpage extends State<mainpage>{
         title: Text('folk guide',
         style: TextStyle(
           color: Colors.green[900],
+          fontSize: 18,
           fontStyle: FontStyle.italic
         ),),
       ),
