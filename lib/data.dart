@@ -6,12 +6,18 @@ import 'package:folkguideapp/mainpage.dart';
 import 'package:intl/intl.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
+// ignore: camel_case_types
 class data extends StatefulWidget{
+  data({this.center});
+  final String center;
   @override
-  bedavailable createState()=>bedavailable();
+  bedavailable createState()=>bedavailable(center: center);
 }
 
+// ignore: camel_case_types
 class bedavailable extends State<data>{
+  bedavailable({this.center});
+  final String center;
   num lb=0,mb=0,ub=0,rlb=0,rmb=0,rub=0,count=0,totalr=0,prob=0,allocs=0,alb=0,amb=0,aub=0;
   num ub1,lb1,mb1;
   Future<num> n;
@@ -164,6 +170,59 @@ class bedavailable extends State<data>{
 
   }
 
+  // ignore: missing_return
+  Material rooms(num R,num l,num m,num u){
+      return Material(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20)
+        ),
+        color: Colors.white,
+        elevation: 30,
+        child:Padding(
+          padding: EdgeInsets.all(7),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text('Room number $R',
+                style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 14
+                ),),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text("lower berth's: $l",
+                        style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 13
+                        )
+                    ),
+                  ),
+                  Expanded(
+                    child: Text("middle berth's $m",
+                        style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 13
+                        )
+                    ),
+                  ),
+                  Expanded(
+                    child: Text("upper berth's $u",
+                        style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 13
+                        )
+                    ),
+                  ),
+                ],
+              )
+            ],
+          ),
+        )
+      );
+  }
+
 
   Future<bool> updatedata(BuildContext context) {
     return showDialog(
@@ -171,69 +230,72 @@ class bedavailable extends State<data>{
         barrierDismissible: false,
         builder: (BuildContext context) {
           return new AlertDialog(
-            title: Text("Update bed details"),
-            content: Container(
-              height: 300,
-              child:Column(
-              children: <Widget>[
-                    Column(
+            title: Text("Add a room, $center"),
+            content: Scrollbar(
+              child: SingleChildScrollView(
+                child:  Container(
+                  child:Column(
                     children: <Widget>[
-                      Text("Lower Berth :",
-                      style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 16
-                      ),),
-                    SizedBox(height: 6,),
-                    TextField(
-                      controller: lowerberth,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [WhitelistingTextInputFormatter.digitsOnly],
-                      onChanged: (Value){
-                        this.lb1=num.tryParse(Value);
-                      },
-                    ),
-                    ],
-                  ),
-                      Column(
+                      Row(
                         children: <Widget>[
-                          Text("Upper Berth :",
+                          Text("No. of lower bed's:",
                             style: TextStyle(
                                 color: Colors.black,
                                 fontSize: 16
                             ),),
-                          SizedBox(height: 6,),
+                          SizedBox(width: 2,),
                           TextField(
-                            controller: upperberth,
+                            controller: lowerberth,
                             keyboardType: TextInputType.number,
                             inputFormatters: [WhitelistingTextInputFormatter.digitsOnly],
-                            onChanged: (Value){
-                              this.ub1=num.tryParse(Value);
+                            onChanged: (value){
+                              this.lb1=num.tryParse(value);
                             },
                           ),
                         ],
                       ),
-                    Column(
-                    children: <Widget>[
-                    Text("Middle Berth :",
-                    style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 16
-                    ),),
-                    SizedBox(height: 6,),
-                    TextField(
-                    controller: middleberth,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [WhitelistingTextInputFormatter.digitsOnly],
-                    onChanged: (Value){
-                    this.mb1=num.tryParse(Value);
-                    },
-                    ),
-                    SizedBox(height:10),
-                    Text('Note:Even individual fields can be updated.')
+                      Row(
+                        children: <Widget>[
+                          Text("No. of middle bed's:",
+                            style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 16
+                            ),),
+                          SizedBox(width: 2,),
+                          TextField(
+                            controller: upperberth,
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [WhitelistingTextInputFormatter.digitsOnly],
+                            onChanged: (value){
+                              this.ub1=num.tryParse(value);
+                            },
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: <Widget>[
+                          Text("No. of upper bed's:",
+                            style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 16
+                            ),),
+                          SizedBox(width: 2,),
+                          TextField(
+                            controller: middleberth,
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [WhitelistingTextInputFormatter.digitsOnly],
+                            onChanged: (Value){
+                              this.mb1=num.tryParse(Value);
+                            },
+                          ),
+                          SizedBox(height:10),
+                          Text('Note: Even individual fields can be added.')
+                        ],
+                      )
                     ],
-                    )
-              ],
-            ),
+                  ),
+                ),
+              ),
             ),
             contentPadding: EdgeInsets.all(10.0),
             actions: <Widget>[
@@ -246,16 +308,23 @@ class bedavailable extends State<data>{
                   updates();
                   Navigator.of(context).pop();
                   Navigator.push(context, MaterialPageRoute(builder:(context)=>mainpage()));
-
-                },
+                  },
                 padding: EdgeInsets.all(9),
                 color: Colors.green[900],
-                shape: new RoundedRectangleBorder(side:BorderSide( width: 3,
-                    style: BorderStyle.solid),borderRadius:BorderRadius.circular(20)),
+                shape: new RoundedRectangleBorder(borderRadius:BorderRadius.circular(20)),
               )
             ],
           );
         });
+  }
+
+  Column room(){
+    List<Text> values = [Text('hello'),Text('hello'),Text('hello'),];
+    return Column(
+      children: [
+
+      ],
+    );
   }
 
 
@@ -266,12 +335,42 @@ class bedavailable extends State<data>{
     requests();
     bedData();
   }
+  void noreqs(String info){
+    Scaffold.of(context).showSnackBar(SnackBar(
+      content: Text(info),
+    ));
+  }
+
 
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Scrollbar(
+    return MaterialApp(
+        home:Scaffold(
+          appBar: AppBar(
+            leading: Builder(
+            builder: (BuildContext context){
+              return IconButton(
+                icon: Icon(Icons.arrow_back_ios),
+                color: Colors.green[900],
+                onPressed: (){
+                  Navigator.of(context).pop();
+                  Navigator.push(context, MaterialPageRoute(builder: (context)=>mainpage(center:center,)));
+                },
+              );
+            },
+            ),
+            backgroundColor: Colors.white,
+            title: Text('Bed availability',
+            style: TextStyle(
+                color: Colors.green[900],
+                fontWeight: FontWeight.bold,
+                fontSize: 17,
+                fontStyle: FontStyle.italic
+            ),),
+            centerTitle: true,
+          ),
+         body: Scrollbar(
           child:SingleChildScrollView(
           child:Padding(
           padding: EdgeInsets.all(18),
@@ -295,72 +394,88 @@ class bedavailable extends State<data>{
             Text('total available beds :$count',
             style:TextStyle(
             color:Colors.black,
-    fontSize: 16
-    )),
-    SizedBox(height: 5,),
-    Row(
-    children: <Widget>[
-    Expanded(child:details("Lower berth",lb)),
-    Expanded(child:details("Middle berth", mb)),
-    Expanded(child:details("Upper berth", ub)),
-    ],
-    ),
-    SizedBox(height: 9,),
-    SizedBox(width: double.infinity,height: 2,
-    child: Container(
-    color: Colors.black,
-    ),),
-    SizedBox(height: 9,),
-    Text('Bed requests data',
-    style:TextStyle(
-    color:Colors.black,
-    fontSize: 19
-    )),
-    SizedBox(height: 5,),
-    Text('total Bed requests :$totalr',
-    style:TextStyle(
-    color:Colors.black,
-    fontSize: 16
-    )),
-    SizedBox(height: 5,),
-    Row(
-    children: <Widget>[
-    Expanded(child:details("Lower berth",rlb)),
-    Expanded(child:details("Middle berth", rmb)),
-    Expanded(child:details("Upper berth", rub)),
-    ],
-    ),
-    ],
-    ),
-    shape: RoundedRectangleBorder(borderRadius:BorderRadius.circular(35)),
-    ),
-    ),
-    SizedBox(height: 20,),
-    Container(
-    padding: EdgeInsets.all(16),
-    child: Text(note,
-    style: TextStyle(
-    fontSize: 16
-    ),)
-    ,),
-    SizedBox(height: 20,),
-    MaterialButton(
-    padding: EdgeInsets.all(18),
-    child: Text('Update data',
-    style: TextStyle(
-    color: Colors.white,
-    ),),
-    color: Colors.green[900],
-    shape: new RoundedRectangleBorder(side:BorderSide( width: 3,
-    style: BorderStyle.solid),borderRadius:BorderRadius.circular(20)),
-    onPressed: (){
-    updatedata(context);
-    },
-    )
-    ],
+            fontSize: 16
+            )),
+            SizedBox(height: 5,),
+            Row(
+            children: <Widget>[
+            Expanded(child:details("Lower berth",lb)),
+            Expanded(child:details("Middle berth", mb)),
+            Expanded(child:details("Upper berth", ub)),
+            ],
+            ),
+            SizedBox(height: 9,),
+            SizedBox(width: double.infinity,height: 2,
+            child: Container(
+            color: Colors.black,
+            ),),
+            SizedBox(height: 9,),
+            Text('Bed requests data',
+            style:TextStyle(
+            color:Colors.black,
+            fontSize: 19
+            )),
+            SizedBox(height: 5,),
+            Text('total Bed requests :$totalr',
+            style:TextStyle(
+            color:Colors.black,
+            fontSize: 16
+            )),
+            SizedBox(height: 5,),
+            Row(
+            children: <Widget>[
+            Expanded(child:details("Lower berth",rlb)),
+            Expanded(child:details("Middle berth", rmb)),
+            Expanded(child:details("Upper berth", rub)),
+            ],
+            ),
+            ],
+            ),
+            shape: RoundedRectangleBorder(borderRadius:BorderRadius.circular(35)),
+            ),
+            ),
+            SizedBox(height: 20,),
+//            Container(
+//            padding: EdgeInsets.all(16),
+//            child: Text(note,
+//            style: TextStyle(
+//            fontSize: 16
+//            ),)
+//            ,),
+            Column(
+             crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                rooms(1, 4, 5, 10),
+                SizedBox(height:5),
+                rooms(1, 4, 5, 10),
+                SizedBox(height:5),
+                rooms(1, 4, 5, 10),
+                SizedBox(height:5),
+                rooms(1, 4, 5, 10),
+              ],
+            ),
+            SizedBox(height: 20,),
+            MaterialButton(
+            padding: EdgeInsets.all(18),
+            child: Text('Update data',
+            style: TextStyle(
+            color: Colors.white,
+            ),),
+            color: Colors.green[900],
+            shape: new RoundedRectangleBorder(side:BorderSide( width: 3,
+            style: BorderStyle.solid),borderRadius:BorderRadius.circular(20)),
+            onPressed: (){
+//            updatedata(context);
+//             noreqs(center);
+            setState(() {
+              note=center;
+            });
+            },
+            )
+            ],
             ),
     ),),)
-    );
+    ));
   }
 }
 

@@ -2,7 +2,9 @@ import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:folkguideapp/allocation.dart';
+import 'package:folkguideapp/main.dart';
 import 'data.dart';
 
 // ignore: camel_case_types
@@ -15,50 +17,65 @@ class mainpage extends StatefulWidget{
 
 
 // ignore: camel_case_types
-class actionpage extends State<mainpage>{
+class actionpage extends State<mainpage> {
   actionpage({this.center});
   String center;
-    int selectedIndex = 0;
-    final widgetOptions = [
-      allocation(),
-      data(),
-    ];
-
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(home: Scaffold(
       appBar: AppBar(
+        leading: Builder(
+          builder: (BuildContext context){
+            return IconButton(
+              icon: Icon(Icons.arrow_back_ios),
+              color: Colors.green[900],
+              onPressed: (){
+                Navigator.of(context).pop();
+                Navigator.push(context, MaterialPageRoute(builder: (context)=>myapp()));
+              },
+            );
+          },
+        ),
         backgroundColor: Colors.white,
-        title: Text('folk guide',
-        style: TextStyle(
-          color: Colors.green[900],
-          fontSize: 18,
-          fontStyle: FontStyle.italic
-        ),),
+        title: Text('Folk guide',
+          style: TextStyle(
+              color: Colors.green[900],
+              fontWeight: FontWeight.bold,
+              fontSize: 17,
+              fontStyle: FontStyle.italic
+          ),),
+        actions: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              MaterialButton(
+                padding: EdgeInsets.fromLTRB(1, 14, 1, 0),
+                child: Column(
+                  children: [
+                    Icon(Icons.assignment, color: Colors.black, size: 18,),
+                    Text('Bed availability',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 10,
+//                       fontWeight: FontWeight.bold
+                      ),)
+                  ],
+                ),
+                onPressed: () {
+                  Navigator.push(context, MaterialPageRoute(builder:(context)=>data(center: center,)));
+                },
+              ),
+              SizedBox(width: 17,)
+            ],
+          )
+        ],
       ),
       body: Center(
-        child: widgetOptions.elementAt(selectedIndex),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.white,
-        type: BottomNavigationBarType.fixed,
-        iconSize: 20.0,
-        items: <BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(Icons.airline_seat_individual_suite,color: Colors.black,), title: Text('Bed requests',style: TextStyle(color: Colors.black),)),
-          BottomNavigationBarItem(icon: Icon(Icons.assignment,color: Colors.black,), title: Text('Bed Availability',style: TextStyle(color: Colors.black),)),
-        ],
-        currentIndex: selectedIndex,
-        fixedColor: Colors.white,
-        onTap: onItemTapped,
+        child: allocation(center: center),
       ),
     ),
     );
   }
-
-        void onItemTapped(int index) {
-          setState(() {
-            selectedIndex = index;
-          });
-        }
 }

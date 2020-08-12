@@ -6,13 +6,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:intl/intl.dart';
-import 'package:spinner/spinner.dart';
+// ignore: camel_case_types, must_be_immutable
 class allocation extends StatefulWidget{
+  allocation({this.center});
+  final String center;
   @override
-  allocationpage createState()=>allocationpage();
+  allocationpage createState()=>allocationpage(center: center);
 }
 
+// ignore: camel_case_types
 class allocationpage extends State<allocation>{
+  allocationpage({this.center});
+  final String center;
   num lb=0,mb=0,ub=0,rlb=0,rmb=0,rub=0,count=0,totalr=0,prob=0,allocs=0,alb=0,amb=0,aub=0;
   bool flag=false;
   String note="Loading..",note1="Loading..",req="Loading..";
@@ -429,19 +434,26 @@ class allocationpage extends State<allocation>{
                 actions: <Widget>[
                   new Row(
                     children: <Widget>[
-                      MaterialButton(
-                        child: Text("No"),
+                      FlatButton(
+                        child: Text("No",
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold
+                        ),),
                         onPressed: () {
                           Navigator.of(context).pop();
                         },
                         padding: EdgeInsets.all(9),
-                        color: Colors.green[900],
-                        shape: new RoundedRectangleBorder(side:BorderSide( width: 3,
-                            style: BorderStyle.solid),borderRadius:BorderRadius.circular(20)),
                       ),
                       SizedBox(width: 4,),
-                      MaterialButton(
-                        child: Text("Yes"),
+                      FlatButton(
+                        child: Text("Yes",
+                        style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold
+                        ),),
                         onPressed: () async{
                           if(val==true){
                               await allocaterequests();
@@ -453,9 +465,6 @@ class allocationpage extends State<allocation>{
                             }
                           },
                         padding: EdgeInsets.all(9),
-                        color: Colors.green[900],
-                        shape: new RoundedRectangleBorder(side:BorderSide( width: 3,
-                            style: BorderStyle.solid),borderRadius:BorderRadius.circular(20)),
                       )
                     ],
                   )
@@ -513,46 +522,50 @@ class allocationpage extends State<allocation>{
       @override
       Widget build(BuildContext context)
       {
-        return  Scaffold(body:Column(
+        return  Scaffold(
+            body:Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
                     Expanded(child:requestlist()),
                     Container(
-                      height: 60,
-                      color: Colors.white,
+                      height: 50,
+                      color: Colors.transparent,
                       child: Row(
                         children: <Widget>[
-                          SizedBox(width: 3,),
+                          SizedBox(width: 10,),
                           Expanded(
                             child: MaterialButton(
+                              elevation: 10,
                               child: Text('Decline all',
                                 style: TextStyle(
                                   color: Colors.black,
                                 ),),
                               color: Colors.white,
-                              shape: new RoundedRectangleBorder(side:BorderSide( width: 1,color: Colors.black,
-                                  style: BorderStyle.solid),borderRadius:BorderRadius.circular(3)),
+                              shape: new RoundedRectangleBorder(side:BorderSide( width: 2,color: Colors.black,
+                                  style: BorderStyle.solid),borderRadius:BorderRadius.circular(20)),
                               onPressed: (){
                                 allocate(context,"Declining requests.",note1,false);
                               },
                             ) ,
                           ),
-                          SizedBox(width: 5,),
+                          SizedBox(width: 25,),
                           Expanded(
                             child: MaterialButton(
+                              elevation: 8,
                               child: Text('Accept all',
                                 style: TextStyle(
                                   color: Colors.black,
                                 ),),
-                              color: Colors.white,
-                              shape: new RoundedRectangleBorder(side:BorderSide( width: 1,color: Colors.black,
-                                  style: BorderStyle.solid),borderRadius:BorderRadius.circular(3)),
+                              color: Colors.white70,
+                              shape: new RoundedRectangleBorder(side:BorderSide( width: 2,color: Colors.black,
+                                  style: BorderStyle.solid),
+                              borderRadius:BorderRadius.circular(20)),
                               onPressed: (){
                                 allocate(context,"Confirmation for allocation.",note,true);
                               },
                             ) ,
                           ),
-                          SizedBox(width: 3,)
+                          SizedBox(width: 10,)
                         ],
                       ),
                     ),
@@ -567,11 +580,14 @@ class requestlist extends StatelessWidget{
   static DateTime now = DateTime.now();
   static var  formatter = DateFormat('yyyy-MM-dd');
   static var today = formatter.format(now);
-  List<MaterialColor> colors = [Colors.green,Colors.yellow,Colors.red,
-                               Colors.indigo,Colors.purple,Colors.lightBlue,
-                               Colors.pink,Colors.orange,Colors.cyan,
-                               Colors.teal];
-//  List<String> images = ['']
+  List<String> images = ['https://firebasestorage.googleapis.com/v0/b/folkapp-a0871.''appspot.com/o/pexels-fabian-wiktor-994605.jpg?alt=media&token=75531d8e'
+      '   -3cf5-4f3d-b06b-cc7745114b37','https://firebasestorage.googleapis.com/v0/b/folkapp-a0871.appspot.com/o/pexels-jiarong-deng-1034662.jpg?alt=media&'
+      'token=c827d22a-4d31-4747-97f9-7ce32a05d7ba','https://firebasestorage.googleapis.com/v0/b/folkapp-a0871.appspot.com/o/pexels-pavlo-luchkovski-337909.'
+  'jpg?alt=media&token=1a650cfa-752c-440e-81f3-56fd92da5923','https://firebasestorage.googleapis.com/v0/b/folkapp-a0871.appspot.com/o/pexels-ricardo-esqui'
+      'vel-1586298.jpg?alt=media&token=39c1928e-88f9-4754-ab2d-4c38fc518da3','https://firebasestorage.googleapis.com/v0/b/folkapp-a0871.appspot.com/o/pexe'
+      'ls-stijn-dijkstra-2583852.jpg?alt=media&token=f9308f22-ec5c-44aa-99bc-3ec99c1157f0','https://firebasestorage.googleapis.com/v0/b/folkapp-a0871.apps'
+      'pot.com/o/pexels-todd-trapani-2754200.jpg?alt=media&token=ae149bf0-412d-4880-819c-33352aafa2a6','https://firebasestorage.googleapis.com/v0/b/folkapp'
+      '-a0871.appspot.com/o/pexels-sourav-mishra-1149831.jpg?alt=media&token=cf023b19-f06e-4e64-baaa-d7d2398bf0b6'];
 
   @override
   Widget build(BuildContext context) {
@@ -596,19 +612,21 @@ class requestlist extends StatelessWidget{
                         mainAxisAlignment: MainAxisAlignment.start,
                         crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
-                            SizedBox(height:8,),
+                            SizedBox(height:9,),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Column(
                                   children: [
                                     Container(
-                                      alignment: Alignment.topCenter,
+                                      alignment: Alignment.topRight,
                                       child:CircleAvatar(
-                                        backgroundColor: colors.elementAt(Random().nextInt(10)),
+                                        backgroundImage: NetworkImage(images.elementAt(Random().nextInt(6))),
+                                        backgroundColor: Colors.green[900],
                                         radius: 25,
                                       ),
-                                    )
+                                    ),
                                   ],
                                 ),
                                 SizedBox(width: 8,),

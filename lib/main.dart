@@ -33,7 +33,9 @@ class authentication extends State<myapp> {
   Future getcenters() async{
     var db = await Firestore.instance.collection('centers').getDocuments();
     db.documents.forEach((element){
-      centers.add(element.documentID.toString());
+      setState(() {
+        centers.add(element.documentID.toString());
+      });
     });
   }
 
@@ -139,8 +141,7 @@ class authentication extends State<myapp> {
                       color: Colors.green[900],
                       shape: new RoundedRectangleBorder(borderRadius:BorderRadius.circular(15)),
                       onPressed: (){
-                        Navigator.of(context).pop();
-                        Navigator.push(context, MaterialPageRoute(builder:(context)=>mainpage()));
+                        Navigator.push(context, MaterialPageRoute(builder:(context)=>mainpage(center: selectedcenter,)));
                       },
                     )
                   ],
