@@ -30,7 +30,7 @@ class authentication extends State<myapp> {
   List<String> centers = [];
   String selectedcenter='Center1';
 
-  Future getcenters() async{
+  Future<void> getcenters() async{
     var db = await Firestore.instance.collection('centers').getDocuments();
     db.documents.forEach((element){
       setState(() {
@@ -82,6 +82,7 @@ class authentication extends State<myapp> {
     // TODO: implement initState
     super.initState();
     getcenters();
+
   }
   
   // This widget is the root of your application.
