@@ -88,60 +88,7 @@ class bedavailable extends State<data>{
   }
 
 
-  Future<num> bedData() async {
-    var collectonRef = Firestore.instance.collection('beds');
-    var doc =await collectonRef.document('details').get();
-    if(doc.exists && flag) {
-      setState(() async {
-        var collectionRef = Firestore.instance.collection(center).document('room').collection('data');
-        var getdoc = await collectionRef.getDocuments();
-        // ignore: non_constant_identifier_names
-        var admin = await  Firestore.instance.collection('centers').document(center).get();
-        admin = admin.data['admin'];
-        location = admin.data['Location'];
-        if(collectionRef.document()!=null) {
-          getdoc.documents.forEach((room) {
-            lb = lb+room.data['lowerberth'];
-            mb = mb+room.data['middleberth'];
-            ub = lb+room.data['upperberth'];
-          });
-        }
-        count=lb+mb+ub;
-        await reqcount("LOWER_BERTH","Waiting for approval");
-        await reqcount("MIDDLE_BERTH","Waiting for approval");
-        await reqcount("UPPER_BERTH","Waiting for approval");
-        await reqcount("LOWER_BERTH","Bed allocated");
-        await reqcount("MIDDLE_BERTH","Bed allocated");
-        await reqcount("UPPER_BERTH","Bed allocated");
-        if(totalr==0){
-          note="No folks have requested beds for today.";
-        }
-        else if(totalr>0 && count==0){
-          note="There is no beds to allocate.";
-        }
-        else if(totalr<=count){
-          note="Beds available for all the requests.";
-        }
-        else if(count==0){
-          note="There is no beds to allocate.";
-        }
-        else{
-          prob=((count/totalr)*100).round();
-          note="Beds available for only $prob %"
-              "($count requests) of requests.";
-        }
-      });
-    }
-    else{
-      setState(() {
-        lb= doc.data['lower_berth'];
-        mb= doc.data['middle_berth'];
-        ub= doc.data['upper_berth'];
-        count=lb+mb+ub;
-        note="No folks have requested beds for today.";
-      });
-    }
-  }
+
 
 
   Column details(String field,num n){
@@ -192,20 +139,31 @@ class bedavailable extends State<data>{
         rooms++;
       });
     }
-    collectionRef.document('Room$rooms').setData({
-      "lowerberth" : l,
-      "middleberth" : m,
-      "upperberth" : b,
-    });
+    if( rooms!=1 && collectionRef.document('Room$rooms').documentID=='Room$rooms'){
+      rooms++;
+      collectionRef.document('Room$rooms').setData({
+        "lowerberth" : l,
+        "middleberth" : m,
+        "upperberth" : b,
+      });
+    }
+    else{
+      collectionRef.document('Room$rooms').setData({
+        "lowerberth" : l,
+        "middleberth" : m,
+        "upperberth" : b,
+      });
+    }
   }
 
-  Future<bool> question(BuildContext context,String field,String text,String doc) {
+  Future<bool> question(BuildContext context,String field,String text,String doc,num i) {
     return showDialog(
         context: context,
         barrierDismissible: false,
         builder: (BuildContext context) {
           return new AlertDialog(
-            title: Text(field),
+            title: Text(field
+            ,textAlign: TextAlign.left,),
             content: Text(text),
             contentPadding: EdgeInsets.all(10.0),
             actions: <Widget>[
@@ -232,9 +190,13 @@ class bedavailable extends State<data>{
                           fontWeight: FontWeight.bold
                       ),),
                     onPressed: () async{
-                      Firestore.instance.collection(center).document('room').collection('data')
+                      Navigator.of(context).pop();
+                      await Firestore.instance.collection(center).document('room').collection('data')
                           .document(doc).delete();
-                    },
+                            setState(() {
+                              roomslist.removeAt(i==0?0:i+1);
+                            });
+                      },
                     padding: EdgeInsets.all(9),
                   )
                 ],
@@ -248,101 +210,136 @@ class bedavailable extends State<data>{
 
 
 
-  Material rooms(String no,num l,num m,num u){
+  Material rooms(String no,num l,num m,num u,num i){
     return Material(
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20)
         ),
         color: Colors.white,
         elevation: 30,
-        child:Padding(
-          padding: EdgeInsets.symmetric(horizontal:3,vertical:5),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  SizedBox(width: 10,),
-                  Text('$no',
-                    style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold
-                    ),),
-                  Expanded(
-                    child:SizedBox(width: 40,),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.edit,color: Colors.black,),
-                    onPressed: (){
-                      lowerberth.text = l.toString();
-                      upperberth.text = u.toString();
-                      middleberth.text = m.toString();
-                      updatedata(context,"$no(Edit)");
-                    },
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.delete_forever,color: Colors.black,),
-                    onPressed: (){
-                      question(context,'Remove,$no','Do you want to remove ,$no.',no);
-                    },
-                  ),
-                ],
-              ),
-              SizedBox(height: 5,),
-              Row(
-                children: [
-                  Expanded(
-                    child:details('lower berth', l),
-                  ),
-                  Expanded(
-                    child: details('middle berth', m)
-                  ),
-                  Expanded(
-                    child: details('upper berth', u)
-                  ),
-                ],
-              )
-            ],
+        child: FlatButton(
+          onPressed: (){
+
+          },
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal:1,vertical:5),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    SizedBox(width: 10,),
+                    Text('$no',
+                      style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold
+                      ),),
+                    Expanded(
+                      child:SizedBox(width: 40,),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.edit,color: Colors.black,),
+                      onPressed: (){
+                        lowerberth.text = l.toString();
+                        upperberth.text = u.toString();
+                        middleberth.text = m.toString();
+                        lb = lb-num.parse(lowerberth.text);
+                        mb = mb-num.parse(middleberth.text);
+                        ub = ub-num.parse(upperberth.text);
+                        lb1=num.parse(lowerberth.text);
+                        mb1=num.parse(middleberth.text);
+                        ub1=num.parse(upperberth.text);
+                        updatedata(context,'$no(Edit)','Save',no).then((value) {
+                          setState(() {
+                            roomslist.insert(i==0?0:i+1,rooms(no, l, m, u,i==0?0:i+1));
+                            lb = lb+num.parse(lowerberth.text);
+                            mb = mb+num.parse(middleberth.text);
+                            ub = ub+num.parse(upperberth.text);
+                            count=lb+mb+ub;
+                          });
+                        });
+                      },
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.delete_forever,color: Colors.black,),
+                      onPressed: (){
+                        setState(() {
+                          lb=lb-l;
+                          mb=mb-1;
+                          ub=ub-1;
+                        });
+                        question(context,'Remove, $no','Do you really want to remove ,$no.',no,i);
+                      },
+                    ),
+                  ],
+                ),
+                SizedBox(height: 5,),
+                Row(
+                  children: [
+                    Expanded(
+                      child:details('lower berth', l),
+                    ),
+                    Expanded(
+                        child: details('middle berth', m)
+                    ),
+                    Expanded(
+                        child: details('upper berth', u)
+                    ),
+                  ],
+                )
+              ],
+            ),
           ),
-        )
+        ),
     );
   }
 
 //   ignore: missing_return
   Future<void> addroom() async{
     rcount=1;
+    num i=0;
+    roomslist.clear();
     var collectionRef = Firestore.instance.collection(center).document('room').collection('data');
     var getdoc = await collectionRef.getDocuments();
+    var adminstrator = await  Firestore.instance.collection('centers').document(center).get();
+    admin =  adminstrator.data['admin'];
+    location = adminstrator.data['Location'];
     if(collectionRef.document()!=null)
       getdoc.documents.forEach((roomN) {
         rcount++;
+        i++;
         setState(() {
-          roomslist.add(rooms(roomN.documentID, roomN.data['lowerberth'], roomN.data['middleberth'], roomN.data['upperberth']));
+          lb = lb+roomN.data['lowerberth'];
+          mb = mb+roomN.data['middleberth'];
+          ub = lb+roomN.data['upperberth'];
+          roomslist.add(rooms(roomN.documentID, roomN.data['lowerberth'], roomN.data['middleberth'], roomN.data['upperberth'],i));
           roomslist.add(Material(
             color: Colors.transparent,
             child: SizedBox(height: 5,),
           ));
         });
       });
+      count=lb+mb+ub;
   }
 
 
 
-  Future<bool> updatedata(BuildContext context,String text) {
+  Future<bool> updatedata(BuildContext context,String text,String button,String doc) {
     return showDialog(
         context: context,
         barrierDismissible: false,
         builder: (BuildContext context) {
-          return new AlertDialog(
+          return AlertDialog(
             title: Text(text),
-            content: Container(
-                 height: 300,
+            content:SafeArea(
+              child: Container(
+                  height: 300,
                   child: Padding(
                     padding: EdgeInsets.all(30) ,
-                    child: Column(
+                    child:Column(
                       children: <Widget>[
                         Row(
                           children: <Widget>[
@@ -360,7 +357,7 @@ class bedavailable extends State<data>{
                                 keyboardType: TextInputType.number,
                                 decoration:InputDecoration(
                                   enabledBorder: UnderlineInputBorder(
-                                    borderSide: BorderSide(color: Colors.green[900])
+                                      borderSide: BorderSide(color: Colors.green[900])
                                   ),
                                   focusedBorder: UnderlineInputBorder(
                                       borderSide: BorderSide(color: Colors.green[900])
@@ -370,11 +367,11 @@ class bedavailable extends State<data>{
                                 onChanged: (value){
                                   this.lb1=num.tryParse(value);
                                 },
-                                ),
                               ),
+                            ),
                           ],
                         ),
-                     Row(
+                        Row(
                           children: <Widget>[
                             Text("No. of middle bed's:",
                               style: TextStyle(
@@ -404,7 +401,7 @@ class bedavailable extends State<data>{
                             )
                           ],
                         ),
-                     Row(
+                        Row(
                           children: <Widget>[
                             Text("No. of upper bed's:",
                               style: TextStyle(
@@ -437,18 +434,34 @@ class bedavailable extends State<data>{
                       ],
                     ),
                   )
+              ),
             ),
             contentPadding: EdgeInsets.all(5.0),
             actions: <Widget>[
               new MaterialButton(
-                child: Text('Add Room'),
+                child: Text(button),
                 onPressed: () {
-                  lowerberth.clear();
-                  upperberth.clear();
-                  middleberth.clear();
-                  updates(lb1, mb1, ub1);
-                  Navigator.of(context).pop();
-                  },
+                  if(button=='Save') {
+                    Navigator.of(context).pop();
+                    Firestore.instance.collection(center).document('room').
+                    collection('data').document(doc).updateData({
+                      "lowerberth" : lb1,
+                      "middleberth" : mb1,
+                      "upperberth" :ub1,
+                    });
+                  }
+                  else{
+                    updates(lb1, mb1, ub1).then((value) {
+                      setState(() {
+                        roomslist.add(rooms('Room$rcount',lb1,mb1,ub1,rcount==1?0:rcount==2?2:rcount+1));
+                      });
+                      lowerberth.clear();
+                      upperberth.clear();
+                      middleberth.clear();
+                    });
+                    Navigator.of(context).pop();
+                  }
+                },
                 padding: EdgeInsets.all(9),
                 color: Colors.green[900],
                 shape: new RoundedRectangleBorder(borderRadius:BorderRadius.circular(11)),
@@ -465,7 +478,6 @@ class bedavailable extends State<data>{
   void initState(){
     super.initState();
     requests();
-    bedData();
     addroom();
   }
 
@@ -594,7 +606,7 @@ class bedavailable extends State<data>{
                          icon: Icon(Icons.add_circle,color: Colors.green[900],),
                          iconSize: 55,
                          onPressed: (){
-                           updatedata(context,'$rcount');
+                           updatedata(context,'Room-$rcount','Add','no');
                          },
                        ),
                        SizedBox(width: 25,)
