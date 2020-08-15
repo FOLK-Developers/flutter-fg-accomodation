@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:folkguideapp/mainpage.dart';
+import 'package:folkguideapp/room.dart';
 import 'package:intl/intl.dart';
 
 // ignore: camel_case_types
@@ -20,9 +21,7 @@ class bedavailable extends State<data>{
   final String center;
   num lb=0,mb=0,ub=0,rlb=0,rmb=0,rub=0,count=0,totalr=0,prob=0,allocs=0,alb=0,amb=0,aub=0;
   String location='',admin='';
-  num ub1=0,lb1=0,mb1=0,rcount=0;
-  Future<num> n;
-  bool flag=true;
+  num ub1=0,lb1=0,mb1=0,lrcount=0,rcount=0,index=0;
   String note="",note1="",tallocs="";
   static DateTime now = DateTime.now();
   static var  formatter = DateFormat('yyyy-MM-dd');
@@ -30,24 +29,10 @@ class bedavailable extends State<data>{
   TextEditingController lowerberth = TextEditingController();
   TextEditingController middleberth = TextEditingController();
   TextEditingController upperberth = TextEditingController();
-  List<Material> roomslist = [];
+  List<Container> roomslist = [];
 
 
-  Future<void> requests() async {
-    var col = await Firestore.instance.collection('request').document(today).collection("allrequests");
-    col.getDocuments().then((value) async {
-      if(value.documents.isNotEmpty){
-        setState((){
-          flag=false;
-        });
-      }
-      else{
-        setState(() {
-          flag=true;
-        });
-      }
-    });
-  }
+
 
   // ignore: missing_return
   Future<num> reqcount(String s,String status) async {
@@ -131,7 +116,7 @@ class bedavailable extends State<data>{
 
   // ignore: missing_return
   Future<void> updates(num l,num m,num b) async{
-    num rooms=1;
+    num rooms=0;
     var collectionRef = Firestore.instance.collection(center).document('room').collection('data');
     var getdoc = await collectionRef.getDocuments();
     if(collectionRef.document()!=null) {
@@ -139,8 +124,10 @@ class bedavailable extends State<data>{
         rooms++;
       });
     }
-    if( rooms!=1 && collectionRef.document('Room$rooms').documentID=='Room$rooms'){
+    if(collectionRef.document('Room$rooms').documentID=='Room$rooms'){
       rooms++;
+      rcount++;
+      lrcount++;
       collectionRef.document('Room$rooms').setData({
         "lowerberth" : l,
         "middleberth" : m,
@@ -194,7 +181,7 @@ class bedavailable extends State<data>{
                       await Firestore.instance.collection(center).document('room').collection('data')
                           .document(doc).delete();
                             setState(() {
-                              roomslist.removeAt(i==0?0:i+1);
+                              roomslist.removeAt(i);
                             });
                       },
                     padding: EdgeInsets.all(9),
@@ -210,119 +197,131 @@ class bedavailable extends State<data>{
 
 
 
-  Material rooms(String no,num l,num m,num u,num i){
-    return Material(
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20)
-        ),
-        color: Colors.white,
-        elevation: 30,
-        child: FlatButton(
-          onPressed: (){
-
-          },
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal:1,vertical:5),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
+  Container rooms(String no,num l,num m,num u,num i){
+    return Container(
+      child: Column(
+        crossAxisAlignment:CrossAxisAlignment.stretch,
+        children: [
+          Material(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            color: Colors.white,
+            elevation: 30,
+            child: FlatButton(
+              onPressed: (){
+                Navigator.push(context,MaterialPageRoute(builder: (context) => room(roomno: no,centers: center,nlb: l,nmb: m,nub: u,),));
+              },
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal:1,vertical:5),
+                child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    SizedBox(width: 10,),
-                    Text('$no',
-                      style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold
-                      ),),
-                    Expanded(
-                      child:SizedBox(width: 40,),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        SizedBox(width: 10,),
+                        Text('$no',
+                          style: TextStyle(
+                              color: Colors.black,
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold
+                          ),),
+                        Expanded(
+                          child:SizedBox(width: 40,),
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.edit,color: Colors.black,),
+                          onPressed: (){
+                            setState(() {
+                              lowerberth.text = l.toString();
+                              upperberth.text = u.toString();
+                              middleberth.text = m.toString();
+                              lb = lb-num.parse(lowerberth.text);
+                              mb = mb-num.parse(middleberth.text);
+                              ub = ub-num.parse(upperberth.text);
+                              count=count-lb-mb-ub;
+                              lb1=num.parse(lowerberth.text);
+                              mb1=num.parse(middleberth.text);
+                              ub1=num.parse(upperberth.text);
+                              updatedata(context,'$no(Edit)','Save',no).then((value) {
+                                roomslist.insert(i,rooms(no, num.parse(lowerberth.text), num.parse(middleberth.text),
+                                    num.parse(upperberth.text),i));
+                                lb = lb+num.parse(lowerberth.text);
+                                mb = mb+num.parse(middleberth.text);
+                                ub = ub+num.parse(upperberth.text);
+                                count=count+lb+mb+ub;
+                              });
+                            });
+                          },
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.delete_forever,color: Colors.black,),
+                          onPressed: (){
+                            setState(() {
+                              lb=lb-l;
+                              mb=mb-m;
+                              ub=ub-u;
+                              count=count-lb-mb-ub;
+                            });
+                            question(context,'Remove, $no','Do you really want to remove ,$no.',no,i);
+                          },
+                        ),
+                      ],
                     ),
-                    IconButton(
-                      icon: Icon(Icons.edit,color: Colors.black,),
-                      onPressed: (){
-                        lowerberth.text = l.toString();
-                        upperberth.text = u.toString();
-                        middleberth.text = m.toString();
-                        lb = lb-num.parse(lowerberth.text);
-                        mb = mb-num.parse(middleberth.text);
-                        ub = ub-num.parse(upperberth.text);
-                        lb1=num.parse(lowerberth.text);
-                        mb1=num.parse(middleberth.text);
-                        ub1=num.parse(upperberth.text);
-                        updatedata(context,'$no(Edit)','Save',no).then((value) {
-                          setState(() {
-                            roomslist.insert(i==0?0:i+1,rooms(no, l, m, u,i==0?0:i+1));
-                            lb = lb+num.parse(lowerberth.text);
-                            mb = mb+num.parse(middleberth.text);
-                            ub = ub+num.parse(upperberth.text);
-                            count=lb+mb+ub;
-                          });
-                        });
-                      },
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.delete_forever,color: Colors.black,),
-                      onPressed: (){
-                        setState(() {
-                          lb=lb-l;
-                          mb=mb-1;
-                          ub=ub-1;
-                        });
-                        question(context,'Remove, $no','Do you really want to remove ,$no.',no,i);
-                      },
-                    ),
+                    SizedBox(height: 5,),
+                    Row(
+                      children: [
+                        Expanded(
+                          child:details('lower berth', l),
+                        ),
+                        Expanded(
+                            child: details('middle berth', m)
+                        ),
+                        Expanded(
+                            child: details('upper berth', u)
+                        ),
+                      ],
+                    )
                   ],
                 ),
-                SizedBox(height: 5,),
-                Row(
-                  children: [
-                    Expanded(
-                      child:details('lower berth', l),
-                    ),
-                    Expanded(
-                        child: details('middle berth', m)
-                    ),
-                    Expanded(
-                        child: details('upper berth', u)
-                    ),
-                  ],
-                )
-              ],
+              ),
             ),
           ),
-        ),
+          Material(
+            color: Colors.transparent,
+            child: SizedBox(
+              height: 5,
+            ),
+          )
+        ],
+      ),
     );
   }
 
 //   ignore: missing_return
   Future<void> addroom() async{
-    rcount=1;
-    num i=0;
     roomslist.clear();
     var collectionRef = Firestore.instance.collection(center).document('room').collection('data');
     var getdoc = await collectionRef.getDocuments();
     var adminstrator = await  Firestore.instance.collection('centers').document(center).get();
-    admin =  adminstrator.data['admin'];
-    location = adminstrator.data['Location'];
-    if(collectionRef.document()!=null)
-      getdoc.documents.forEach((roomN) {
-        rcount++;
-        i++;
-        setState(() {
-          lb = lb+roomN.data['lowerberth'];
-          mb = mb+roomN.data['middleberth'];
-          ub = lb+roomN.data['upperberth'];
-          roomslist.add(rooms(roomN.documentID, roomN.data['lowerberth'], roomN.data['middleberth'], roomN.data['upperberth'],i));
-          roomslist.add(Material(
-            color: Colors.transparent,
-            child: SizedBox(height: 5,),
-          ));
+    setState(() {
+      admin = adminstrator.data['admin'];
+      location = adminstrator.data['Location'];
+      if (collectionRef.document() != null){
+        getdoc.documents.forEach((roomN) {
+          rcount++;
+          lb = lb + roomN.data['lowerberth'];
+          mb = mb + roomN.data['middleberth'];
+          ub = ub + roomN.data['upperberth'];
+          roomslist.add(rooms(roomN.documentID, roomN.data['lowerberth'],
+              roomN.data['middleberth'],roomN.data['upperberth'], index));
+          index++;
         });
-      });
+        }
       count=lb+mb+ub;
+    });
   }
 
 
@@ -449,11 +448,19 @@ class bedavailable extends State<data>{
                       "middleberth" : mb1,
                       "upperberth" :ub1,
                     });
+                    lowerberth.clear();
+                    upperberth.clear();
+                    middleberth.clear();
                   }
                   else{
                     updates(lb1, mb1, ub1).then((value) {
                       setState(() {
-                        roomslist.add(rooms('Room$rcount',lb1,mb1,ub1,rcount==1?0:rcount==2?2:rcount+1));
+                        roomslist.add(rooms('Room$rcount',lb1,mb1,ub1,index));
+                        rcount++;
+                        lb = lb+num.parse(lowerberth.text);
+                        mb = mb+num.parse(middleberth.text);
+                        ub = ub+num.parse(upperberth.text);
+                        count=lb+mb+ub;
                       });
                       lowerberth.clear();
                       upperberth.clear();
@@ -477,7 +484,6 @@ class bedavailable extends State<data>{
   @override
   void initState(){
     super.initState();
-    requests();
     addroom();
   }
 
@@ -606,7 +612,8 @@ class bedavailable extends State<data>{
                          icon: Icon(Icons.add_circle,color: Colors.green[900],),
                          iconSize: 55,
                          onPressed: (){
-                           updatedata(context,'Room-$rcount','Add','no');
+                           num temp= rcount+1;
+                           updatedata(context,'Room-$temp','Add','no');
                          },
                        ),
                        SizedBox(width: 25,)
