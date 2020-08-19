@@ -122,8 +122,7 @@ class bedavailable extends State<data>{
       var addroom =  collectionRef.collection('data');
       var db = await collectionRef.get();
       rcount = db.data['roomcount']+1;
-
-      addroom.document('Room$rcount').setData({
+    addroom.document('Room$rcount').setData({
         'rn' : rcount,
         'lowerberth':l,
         'middleberth':m,
@@ -131,11 +130,12 @@ class bedavailable extends State<data>{
       }).then((value) {
           collectionRef.updateData({
             'roomcount': rcount
+          }).catchError((error){
+            collectionRef.collection('data').document('Room$rcount').delete();
+            rcount--;
+            question(context,'Failed adding Room$rcount',"Please try again",'doc',0,0);
+
           });
-      }).catchError((error){
-        rcount--;
-        addroom.document('Room$rcount').delete();
-        question(context,'Failed adding Room$rcount','Try adding room$rcount again.','doc',0,0)
       });
     });
   }
@@ -177,21 +177,20 @@ class bedavailable extends State<data>{
                       ),),
                     onPressed: () async{
                       if(doc!='doc') {
-                        var collection = await Firestore.instance.collection(
-                            center).document('room');
-                        var db = await collection.get();
-                        if (await db.data['roomcount']==rno) {
-                          setState(() {
-                            rcount--;
-                            collection.updateData({
-                              'roomcount': rcount
-                            });
-                          });
-                        }
-                        collection.collection('data')
-                            .document(doc).delete();
-                        Navigator.of(context).pop();
-                      }
+                                var collection = Firestore.instance.collection(
+                                    center).document('room');
+                                var db = await collection.get();
+                                num temp = await db.data['roomcount']; 
+                                if (temp==rno) {
+                                    rcount--;
+                                    collection.updateData({
+                                      'roomcount': rcount
+                                    });
+                                }
+                                collection.collection('data')
+                                    .document(doc).delete();
+                                Navigator.of(context).pop();
+                         }
                       },
                     padding: EdgeInsets.all(9),
                   )
