@@ -1,5 +1,4 @@
 import 'dart:ui';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -12,7 +11,7 @@ class room extends StatefulWidget{
   room({this.roomno,this.centers,this.nlb,this.nmb,this.nub});
   final String roomno;
   final String centers;
-  num nlb,nmb,nub;
+  final num nlb,nmb,nub;
   roomdata createState()=>roomdata(rn: roomno,centers: centers,nlb: nlb,nmb: nmb,nub: nub);
 }
 
@@ -21,20 +20,55 @@ class roomdata extends State<room>{
   roomdata({this.rn,this.centers,this.nlb,this.nmb,this.nub});
   final String rn;
   final String centers;
-  final num nlb,nmb,nub;
+  num nlb,nmb,nub;
+  num c=0;
   String a1,a2,a3;
+  // ignore: non_constant_identifier_names
   num highest,smallest,mid;
   List <Row> bed = [];
   List <MaterialButton> middle = [];
   List <MaterialButton> upper = [];
   List <String> berths =['lb', 'mb','ub'];
-  bedavailable b = bedavailable();
+
+
+  Future<bool> question(BuildContext context,String bedno,String summary) {
+    return showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return new AlertDialog(
+            title: Text(bedno
+              ,textAlign: TextAlign.left,),
+            content: Text(summary),
+            contentPadding: EdgeInsets.all(10.0),
+            actions: <Widget>[
+              FlatButton(
+                child: Text("Ok",
+                  style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold
+                  ),),
+                onPressed: () async{
+                  Navigator.of(context).pop();
+                },
+                padding: EdgeInsets.all(9),
+              )
+            ],
+          );
+        });
+  }
+
+
 
 
   // ignore: missing_return
   MaterialButton beds(Color col,String bedno){
     return MaterialButton(
       padding: EdgeInsets.symmetric(horizontal: 3,vertical: 1),
+      onPressed: (){
+          question(context,bedno,'Currently vacant.');
+      },
       child: Container(
         height: 100,
         width: 60,
@@ -127,27 +161,22 @@ class roomdata extends State<room>{
     return Row(
         children: [
           Expanded(
-              child: beds(lb!=0?Colors.green[900]:Colors.transparent, lb==0?'':'lb-$lb')
+              child: lb==0?MaterialButton():beds(Colors.green[900],'lb-$lb')
           ),
           Expanded(
-              child: beds(mb!=0?Colors.green[900]:Colors.transparent, mb==0?'':'mb-$mb')
+              child: mb==0?MaterialButton():beds(Colors.green[900],'mb-$mb')
           ),
           Expanded(
-              child: beds(ub!=0?Colors.green[900]:Colors.transparent, ub==0?'':'ub-$ub')
+              child: ub==0?MaterialButton():beds(Colors.green[900],'ub-$ub')
           ),
         ]
     );
   }
 
 
-  void merge(){
-    greatest(nlb, nmb, nub);
-    smallests(nlb, nmb, nub);
-
-    
-    middles(nlb, nmb, nub);
-
-    for(int i=1; i<=highest;i++){
+  void merge(num l,num m,num u){
+    // ignore: unnecessary_statements
+    for(int i=0; i<=highest;i++){
       if(i<=smallest){
         bed.add(addbeds(i, i, i));
       }
@@ -182,7 +211,11 @@ class roomdata extends State<room>{
   void initState() {
     // TODO: implement initState
     super.initState();
-     merge();
+    greatest(nlb,nmb,nub);
+    smallests(nlb,nmb,nub);
+    middles(nlb,nmb,nub);
+    merge(nlb,nmb,nub);
+
   }
 
 
@@ -213,33 +246,9 @@ class roomdata extends State<room>{
             ),),
           centerTitle: true,
         ),
-        body:Scrollbar(
-          child: SingleChildScrollView(
-            padding: EdgeInsets.all(8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: bed
-//              [
-//                Row(
-//                  children: [
-//                    Expanded(
-//                      child:beds(Colors.green[900],'lb-1'),
-//                    ),
-//                    Expanded(
-//                      child:beds(Colors.green[900],'lb-1'),
-//                    ),
-//                    Expanded(
-//                      child:beds(Colors.green[900],'lb-1'),
-//                    ),
-//                  ],
-//                ),
-//                addbeds(3, 4, 5)
-//
-//
-//              ],
-            )
-          ),
-        ),
+        body: ListView(
+          children: bed,
+        )
       ),
     );
   }

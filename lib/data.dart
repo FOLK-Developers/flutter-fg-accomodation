@@ -21,7 +21,7 @@ class bedavailable extends State<data>{
   final String center;
   num lb=0,mb=0,ub=0,rlb=0,rmb=0,rub=0,count=0,totalr=0,prob=0,allocs=0,alb=0,amb=0,aub=0;
   String location='',admin='';
-  num ub1=0,lb1=0,mb1=0,lrcount=0,rcount=0,index=0;
+  num ub1=0,lb1=0,mb1=0,rcount=0,index=1;
   String note="",note1="",tallocs="";
   static DateTime now = DateTime.now();
   static var  formatter = DateFormat('yyyy-MM-dd');
@@ -30,6 +30,7 @@ class bedavailable extends State<data>{
   TextEditingController middleberth = TextEditingController();
   TextEditingController upperberth = TextEditingController();
   List<Container> roomslist = [];
+  roomdata r = roomdata();
 
 
 
@@ -116,34 +117,32 @@ class bedavailable extends State<data>{
 
   // ignore: missing_return
   Future<void> updates(num l,num m,num b) async{
-    num rooms=0;
-    var collectionRef = Firestore.instance.collection(center).document('room').collection('data');
-    var getdoc = await collectionRef.getDocuments();
-    if(collectionRef.document()!=null) {
-      getdoc.documents.forEach((room) {
-        rooms++;
+    setState(() async {
+      var collectionRef =  Firestore.instance.collection(center).document('room');
+      var addroom =  collectionRef.collection('data');
+      var db = await collectionRef.get();
+      rcount = db.data['roomcount']+1;
+
+      addroom.document('Room$rcount').setData({
+        'rn' : rcount,
+        'lowerberth':l,
+        'middleberth':m,
+        'upperberth':b
+      }).then((value) {
+          collectionRef.updateData({
+            'roomcount': rcount
+          });
+      }).catchError((error){
+        rcount--;
+        addroom.document('Room$rcount').delete();
+        question(context,'Failed adding Room$rcount','Try adding room$rcount again.','doc',0,0)
       });
-    }
-    if(collectionRef.document('Room$rooms').documentID=='Room$rooms'){
-      rooms++;
-      rcount++;
-      lrcount++;
-      collectionRef.document('Room$rooms').setData({
-        "lowerberth" : l,
-        "middleberth" : m,
-        "upperberth" : b,
-      });
-    }
-    else{
-      collectionRef.document('Room$rooms').setData({
-        "lowerberth" : l,
-        "middleberth" : m,
-        "upperberth" : b,
-      });
-    }
+    });
   }
 
-  Future<bool> question(BuildContext context,String field,String text,String doc,num i) {
+
+
+  Future<bool> question(BuildContext context,String field,String text,String doc,num i,num rno) {
     return showDialog(
         context: context,
         barrierDismissible: false,
@@ -177,12 +176,22 @@ class bedavailable extends State<data>{
                           fontWeight: FontWeight.bold
                       ),),
                     onPressed: () async{
-                      Navigator.of(context).pop();
-                      await Firestore.instance.collection(center).document('room').collection('data')
-                          .document(doc).delete();
-                            setState(() {
-                              roomslist.removeAt(i);
+                      if(doc!='doc') {
+                        var collection = await Firestore.instance.collection(
+                            center).document('room');
+                        var db = await collection.get();
+                        if (await db.data['roomcount']==rno) {
+                          setState(() {
+                            rcount--;
+                            collection.updateData({
+                              'roomcount': rcount
                             });
+                          });
+                        }
+                        collection.collection('data')
+                            .document(doc).delete();
+                        Navigator.of(context).pop();
+                      }
                       },
                     padding: EdgeInsets.all(9),
                   )
@@ -197,7 +206,7 @@ class bedavailable extends State<data>{
 
 
 
-  Container rooms(String no,num l,num m,num u,num i){
+  Container rooms(String no,num l,num m,num u,num i,num rn){
     return Container(
       child: Column(
         crossAxisAlignment:CrossAxisAlignment.stretch,
@@ -210,8 +219,9 @@ class bedavailable extends State<data>{
             elevation: 30,
             child: FlatButton(
               onPressed: (){
-                Navigator.push(context,MaterialPageRoute(builder: (context) => room(roomno: no,centers: center,nlb: l,nmb: m,nub: u,),));
-              },
+                  Navigator.push(context,MaterialPageRoute(builder: (context) =>
+                      room(roomno: no,centers: center,nlb: l,nmb: m,nub: u),));
+                },
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal:1,vertical:5),
                 child: Column(
@@ -246,13 +256,16 @@ class bedavailable extends State<data>{
                               mb1=num.parse(middleberth.text);
                               ub1=num.parse(upperberth.text);
                               updatedata(context,'$no(Edit)','Save',no).then((value) {
-                                roomslist.insert(i,rooms(no, num.parse(lowerberth.text), num.parse(middleberth.text),
-                                    num.parse(upperberth.text),i));
-                                lb = lb+num.parse(lowerberth.text);
-                                mb = mb+num.parse(middleberth.text);
-                                ub = ub+num.parse(upperberth.text);
-                                count=count+lb+mb+ub;
+//                                lb = lb+num.parse(lowerberth.text);
+//                                mb = mb+num.parse(middleberth.text);
+//                                ub = ub+num.parse(upperberth.text);
+//                                count=count+lb+mb+ub;
+                                addroom();
                               });
+//                              .then((value) {
+//                                roomslist.insert(i,rooms(no, num.parse(lowerberth.text), num.parse(middleberth.text),
+//                                    num.parse(upperberth.text),i,rn));
+//                              });
                             });
                           },
                         ),
@@ -260,13 +273,16 @@ class bedavailable extends State<data>{
                           icon: Icon(Icons.delete_forever,color: Colors.black,),
                           onPressed: (){
                             setState(() {
-                              lb=lb-l;
-                              mb=mb-m;
-                              ub=ub-u;
-                              count=count-lb-mb-ub;
+//                              lb=lb-l;
+//                              mb=mb-m;
+//                              ub=ub-u;
+//                              count=count-lb-mb-ub;
+                            question(context,'Remove, $no','Do you really want to remove ,$no.',no,i,rn).
+                            then((value) {
+                                addroom();
+                              });
                             });
-                            question(context,'Remove, $no','Do you really want to remove ,$no.',no,i);
-                          },
+                            },
                         ),
                       ],
                     ),
@@ -302,25 +318,28 @@ class bedavailable extends State<data>{
 
 //   ignore: missing_return
   Future<void> addroom() async{
+    num temp1=0,temp2=0,temp3=0;
     roomslist.clear();
-    var collectionRef = Firestore.instance.collection(center).document('room').collection('data');
-    var getdoc = await collectionRef.getDocuments();
-    var adminstrator = await  Firestore.instance.collection('centers').document(center).get();
+    var collectionRef = Firestore.instance.collection(center);
+    var addroom = await collectionRef.document('room').collection('data').getDocuments();
+    var db = await collectionRef.document('room').get();
+    var adminstrator = await Firestore.instance.collection('centers').document(center).get();
     setState(() {
-      admin = adminstrator.data['admin'];
+      rcount = db.data['roomcount'];
+           addroom.documents.forEach((roomN) {
+              temp1 = temp1 + roomN.data['lowerberth'];
+              temp2 = temp2 + roomN.data['middleberth'];
+              temp3 = temp3 + roomN.data['upperberth'];
+              roomslist.add(rooms(roomN.documentID, roomN.data['lowerberth'],
+                  roomN.data['middleberth'], roomN.data['upperberth'],index,roomN.data['roomcount']));
+              index++;
+            });
+      admin =  adminstrator.data['admin'];
       location = adminstrator.data['Location'];
-      if (collectionRef.document() != null){
-        getdoc.documents.forEach((roomN) {
-          rcount++;
-          lb = lb + roomN.data['lowerberth'];
-          mb = mb + roomN.data['middleberth'];
-          ub = ub + roomN.data['upperberth'];
-          roomslist.add(rooms(roomN.documentID, roomN.data['lowerberth'],
-              roomN.data['middleberth'],roomN.data['upperberth'], index));
-          index++;
-        });
-        }
-      count=lb+mb+ub;
+      lb = temp1;
+      mb = temp2;
+      ub = temp3;
+      count = temp1 + temp2 + temp3;
     });
   }
 
@@ -453,9 +472,11 @@ class bedavailable extends State<data>{
                     middleberth.clear();
                   }
                   else{
-                    updates(lb1, mb1, ub1).then((value) {
+                    updates(lb1, mb1, ub1).
+                    then((value) {
                       setState(() {
-                        roomslist.add(rooms('Room$rcount',lb1,mb1,ub1,index));
+                        addroom();
+                        roomslist.add(rooms('Room$rcount',lb1,mb1,ub1,index,index));
                         rcount++;
                         lb = lb+num.parse(lowerberth.text);
                         mb = mb+num.parse(middleberth.text);
@@ -612,8 +633,8 @@ class bedavailable extends State<data>{
                          icon: Icon(Icons.add_circle,color: Colors.green[900],),
                          iconSize: 55,
                          onPressed: (){
-                           num temp= rcount+1;
-                           updatedata(context,'Room-$temp','Add','no');
+                            num temp = rcount+1;
+                            updatedata(context,'Room-$temp','Add','no');
                          },
                        ),
                        SizedBox(width: 25,)
