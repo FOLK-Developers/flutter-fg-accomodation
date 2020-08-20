@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:intl/intl.dart';
-// ignore: camel_case_types, must_be_immutable
+// ignore: camel_case_types
 class allocation extends StatefulWidget{
   allocation({this.center});
   final String center;
@@ -26,7 +26,7 @@ class allocationpage extends State<allocation>{
   static var today = formatter.format(now);
 
 
-  Future<num> allocater(String berth,String no,String reqid,String docid) async {
+  Future allocater(String berth,String no,String reqid,String docid) async {
     num temp;
     num type;
     if(berth=="LOWER_BERTH"){
@@ -202,7 +202,7 @@ class allocationpage extends State<allocation>{
 
 
 
-  Future<num> allocaterequests() async {
+  Future allocaterequests() async {
         var db = Firestore.instance.collection('requests').document(today).collection('allrequests');
         var docu= await db.where('status',isEqualTo: "Waiting for approval").getDocuments();
         if(docu!=null && totalr!=0 && count!=0 ) {
@@ -250,7 +250,7 @@ class allocationpage extends State<allocation>{
             }
           });
           var collectonRef = Firestore.instance.collection('beds');
-          var doc = await collectonRef.document('details');
+          var doc = collectonRef.document('details');
           doc.updateData({
             "lower_berth": lb,
             "middle_berth": mb,
@@ -289,7 +289,7 @@ class allocationpage extends State<allocation>{
 
 
 
-      Future<num> deleterequests(String status) async {
+      Future deleterequests(String status) async {
         var db = Firestore.instance.collection('requests').document(today).collection('allrequests');
         var docu= await db.where('status',isEqualTo: "Waiting for approval").getDocuments();
         if(totalr!=0) {
@@ -576,11 +576,13 @@ class allocationpage extends State<allocation>{
     }
 
 
+// ignore: must_be_immutable
+// ignore: camel_case_types
 class requestlist extends StatelessWidget{
   static DateTime now = DateTime.now();
   static var  formatter = DateFormat('yyyy-MM-dd');
   static var today = formatter.format(now);
-  List<String> images = ['https://firebasestorage.googleapis.com/v0/b/folkapp-a0871.''appspot.com/o/pexels-fabian-wiktor-994605.jpg?alt=media&token=75531d8e'
+  final List<String> images = ['https://firebasestorage.googleapis.com/v0/b/folkapp-a0871.''appspot.com/o/pexels-fabian-wiktor-994605.jpg?alt=media&token=75531d8e'
       '   -3cf5-4f3d-b06b-cc7745114b37','https://firebasestorage.googleapis.com/v0/b/folkapp-a0871.appspot.com/o/pexels-jiarong-deng-1034662.jpg?alt=media&'
       'token=c827d22a-4d31-4747-97f9-7ce32a05d7ba','https://firebasestorage.googleapis.com/v0/b/folkapp-a0871.appspot.com/o/pexels-pavlo-luchkovski-337909.'
   'jpg?alt=media&token=1a650cfa-752c-440e-81f3-56fd92da5923','https://firebasestorage.googleapis.com/v0/b/folkapp-a0871.appspot.com/o/pexels-ricardo-esqui'

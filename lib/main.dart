@@ -4,7 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:folkguideapp/mainpage.dart';
-import 'package:folkguideapp/room.dart';
+// import 'package:folkguideapp/room.dart';
 
 void main() {
   runApp(MyApp());
@@ -80,7 +80,7 @@ class authentication extends State<myapp> {
   
   @override
   void initState() {
-    // TODO: implement initState
+  
     super.initState();
     getcenters();
 

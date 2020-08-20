@@ -20,8 +20,8 @@ class bedavailable extends State<data>{
   bedavailable({this.center});
   final String center;
   num lb=0,mb=0,ub=0,rlb=0,rmb=0,rub=0,count=0,totalr=0,prob=0,allocs=0,alb=0,amb=0,aub=0;
-  String location='',admin='';
-  num ub1=0,lb1=0,mb1=0,rcount=0,index=1;
+  String location='',admin='',rname='';
+  num ub1=0,lb1=0,mb1=0,rcount=0,index=0;
   String note="",note1="",tallocs="";
   static DateTime now = DateTime.now();
   static var  formatter = DateFormat('yyyy-MM-dd');
@@ -29,8 +29,8 @@ class bedavailable extends State<data>{
   TextEditingController lowerberth = TextEditingController();
   TextEditingController middleberth = TextEditingController();
   TextEditingController upperberth = TextEditingController();
+  TextEditingController roomname = TextEditingController();
   List<Container> roomslist = [];
-  roomdata r = roomdata();
 
 
 
@@ -116,33 +116,41 @@ class bedavailable extends State<data>{
 
 
   // ignore: missing_return
-  Future<void> updates(num l,num m,num b) async{
+  Future<void> updates(String rn,num l,num m,num b) async{
     setState(() async {
       var collectionRef =  Firestore.instance.collection(center).document('room');
       var addroom =  collectionRef.collection('data');
       var db = await collectionRef.get();
-      rcount = db.data['roomcount']+1;
-    addroom.document('Room$rcount').setData({
-        'rn' : rcount,
+      rcount = db.data['roomcount'];
+      if(rcount==null){
+       collectionRef.setData({
+          'roomcount' : 1 
+       }).then((value) {
+          addroom.document(rn).setData({
+        'lowerberth':l,
+        'middleberth':m,
+        'upperberth':b
+      });
+      });
+     }
+    else{
+      rcount++;
+      addroom.document(rn).setData({
         'lowerberth':l,
         'middleberth':m,
         'upperberth':b
       }).then((value) {
           collectionRef.updateData({
             'roomcount': rcount
-          }).catchError((error){
-            collectionRef.collection('data').document('Room$rcount').delete();
-            rcount--;
-            question(context,'Failed adding Room$rcount',"Please try again",'doc',0,0);
-
           });
-      });
-    });
+          });
+      }
+     });
   }
 
 
 
-  Future<bool> question(BuildContext context,String field,String text,String doc,num i,num rno) {
+  Future<bool> question(BuildContext context,String field,String text,String doc) {
     return showDialog(
         context: context,
         barrierDismissible: false,
@@ -176,22 +184,18 @@ class bedavailable extends State<data>{
                           fontWeight: FontWeight.bold
                       ),),
                     onPressed: () async{
-                      if(doc!='doc') {
-                                var collection = Firestore.instance.collection(
-                                    center).document('room');
+                      var collection = Firestore.instance.collection(center).document('room');
                                 var db = await collection.get();
-                                num temp = await db.data['roomcount']; 
-                                if (temp==rno) {
-                                    rcount--;
-                                    collection.updateData({
-                                      'roomcount': rcount
+                                num temp = await db.data['roomcount'];  
+                                temp = temp-1;
+                                 collection.collection('data')
+                                    .document(doc).delete().then((value) {
+                                       collection.updateData({
+                                      'roomcount': temp
+                                      });
                                     });
-                                }
-                                collection.collection('data')
-                                    .document(doc).delete();
-                                Navigator.of(context).pop();
-                         }
-                      },
+                                    Navigator.of(context).pop();
+                                  },
                     padding: EdgeInsets.all(9),
                   )
                 ],
@@ -205,7 +209,7 @@ class bedavailable extends State<data>{
 
 
 
-  Container rooms(String no,num l,num m,num u,num i,num rn){
+  Container rooms(String rn,num l,num m,num u){
     return Container(
       child: Column(
         crossAxisAlignment:CrossAxisAlignment.stretch,
@@ -219,7 +223,7 @@ class bedavailable extends State<data>{
             child: FlatButton(
               onPressed: (){
                   Navigator.push(context,MaterialPageRoute(builder: (context) =>
-                      room(roomno: no,centers: center,nlb: l,nmb: m,nub: u),));
+                      room(roomno: rn,centers: center,nlb: l,nmb: m,nub: u),));
                 },
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal:1,vertical:5),
@@ -231,7 +235,7 @@ class bedavailable extends State<data>{
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         SizedBox(width: 10,),
-                        Text('$no',
+                        Text(rn,
                           style: TextStyle(
                               color: Colors.black,
                               fontSize: 15,
@@ -247,24 +251,14 @@ class bedavailable extends State<data>{
                               lowerberth.text = l.toString();
                               upperberth.text = u.toString();
                               middleberth.text = m.toString();
-                              lb = lb-num.parse(lowerberth.text);
-                              mb = mb-num.parse(middleberth.text);
-                              ub = ub-num.parse(upperberth.text);
-                              count=count-lb-mb-ub;
+                              roomname.text = rn.toString();
                               lb1=num.parse(lowerberth.text);
                               mb1=num.parse(middleberth.text);
                               ub1=num.parse(upperberth.text);
-                              updatedata(context,'$no(Edit)','Save',no).then((value) {
-//                                lb = lb+num.parse(lowerberth.text);
-//                                mb = mb+num.parse(middleberth.text);
-//                                ub = ub+num.parse(upperberth.text);
-//                                count=count+lb+mb+ub;
+                              rname=roomname.text;
+                              updatedata(context,'$rn(Edit)','Save',rn).then((value) {
                                 addroom();
                               });
-//                              .then((value) {
-//                                roomslist.insert(i,rooms(no, num.parse(lowerberth.text), num.parse(middleberth.text),
-//                                    num.parse(upperberth.text),i,rn));
-//                              });
                             });
                           },
                         ),
@@ -272,11 +266,7 @@ class bedavailable extends State<data>{
                           icon: Icon(Icons.delete_forever,color: Colors.black,),
                           onPressed: (){
                             setState(() {
-//                              lb=lb-l;
-//                              mb=mb-m;
-//                              ub=ub-u;
-//                              count=count-lb-mb-ub;
-                            question(context,'Remove, $no','Do you really want to remove ,$no.',no,i,rn).
+                            question(context,'Remove, $rn','Do you really want to remove ,$rn.',rn).
                             then((value) {
                                 addroom();
                               });
@@ -321,17 +311,14 @@ class bedavailable extends State<data>{
     roomslist.clear();
     var collectionRef = Firestore.instance.collection(center);
     var addroom = await collectionRef.document('room').collection('data').getDocuments();
-    var db = await collectionRef.document('room').get();
     var adminstrator = await Firestore.instance.collection('centers').document(center).get();
     setState(() {
-      rcount = db.data['roomcount'];
            addroom.documents.forEach((roomN) {
               temp1 = temp1 + roomN.data['lowerberth'];
               temp2 = temp2 + roomN.data['middleberth'];
               temp3 = temp3 + roomN.data['upperberth'];
               roomslist.add(rooms(roomN.documentID, roomN.data['lowerberth'],
-                  roomN.data['middleberth'], roomN.data['upperberth'],index,roomN.data['roomcount']));
-              index++;
+                  roomN.data['middleberth'], roomN.data['upperberth']));
             });
       admin =  adminstrator.data['admin'];
       location = adminstrator.data['Location'];
@@ -344,53 +331,10 @@ class bedavailable extends State<data>{
 
 
 
-  Future<bool> updatedata(BuildContext context,String text,String button,String doc) {
-    return showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text(text),
-            content:SafeArea(
-              child: Container(
-                  height: 300,
-                  child: Padding(
-                    padding: EdgeInsets.all(30) ,
-                    child:Column(
-                      children: <Widget>[
-                        Row(
+          Row updatefields(String ftext,num n){
+                return Row(
                           children: <Widget>[
-                            Text("No. of lower bed's:",
-                              style: TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 16
-                              ),),
-                            SizedBox(width: 13,),
-                            Container(
-                              width: 50,
-                              child:  TextField(
-                                cursorColor: Colors.green[900],
-                                controller: lowerberth,
-                                keyboardType: TextInputType.number,
-                                decoration:InputDecoration(
-                                  enabledBorder: UnderlineInputBorder(
-                                      borderSide: BorderSide(color: Colors.green[900])
-                                  ),
-                                  focusedBorder: UnderlineInputBorder(
-                                      borderSide: BorderSide(color: Colors.green[900])
-                                  ),
-                                ),
-                                inputFormatters: [WhitelistingTextInputFormatter.digitsOnly],
-                                onChanged: (value){
-                                  this.lb1=num.tryParse(value);
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: <Widget>[
-                            Text("No. of middle bed's:",
+                            Text(ftext,
                               style: TextStyle(
                                   color: Colors.black,
                                   fontSize: 16
@@ -400,13 +344,23 @@ class bedavailable extends State<data>{
                               width: 50,
                               child:  TextField(
                                 cursorColor: Colors.green[900],
-                                controller: middleberth,
+                                controller: n==1?lowerberth:n==2?middleberth:upperberth,
                                 keyboardType: TextInputType.number,
                                 inputFormatters: [WhitelistingTextInputFormatter.digitsOnly],
                                 onChanged: (value){
-                                  this.mb1=num.tryParse(value);
-                                },
-                                decoration:InputDecoration(
+                                  setState(() {
+                                    if(n==1){
+                                      lb1 = num.tryParse(value);
+                                      }
+                                    else if(n==2){
+                                      mb1 = num.tryParse(value);
+                                      }
+                                    else{
+                                      ub1 = num.tryParse(value);
+                                    }  
+                                    });
+                                    },
+                                    decoration:InputDecoration(
                                   enabledBorder: UnderlineInputBorder(
                                       borderSide: BorderSide(color: Colors.green[900])
                                   ),
@@ -417,26 +371,48 @@ class bedavailable extends State<data>{
                               ),
                             )
                           ],
-                        ),
-                        Row(
+                        );
+                      }
+
+
+
+
+  Future<bool> updatedata(BuildContext context,String text,String button,String doc) {
+    return showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text(text),
+            content:Scrollbar(
+              child: SingleChildScrollView(
+                child:Container(
+                  height: 300,
+                  child:Container(
+                  height: 300,
+                  child: Padding(
+                    padding: EdgeInsets.all(30) ,
+                    child:Column(
+                      children: <Widget>[
+                        Column(
                           children: <Widget>[
-                            Text("No. of upper bed's:",
+                            Text('Room no:',
                               style: TextStyle(
                                   color: Colors.black,
                                   fontSize: 16
                               ),),
-                            SizedBox(width: 13,),
+                            SizedBox(width: 3,),
                             Container(
-                              width: 50,
+                              width:300,
                               child:  TextField(
                                 cursorColor: Colors.green[900],
-                                controller: upperberth,
-                                keyboardType: TextInputType.number,
-                                inputFormatters: [WhitelistingTextInputFormatter.digitsOnly],
+                                controller: roomname,
                                 onChanged: (value){
-                                  this.ub1=num.tryParse(value);
-                                },
-                                decoration:InputDecoration(
+                                  setState(() {
+                                    rname = value;
+                                    });
+                                    },
+                                    decoration:InputDecoration(
                                   enabledBorder: UnderlineInputBorder(
                                       borderSide: BorderSide(color: Colors.green[900])
                                   ),
@@ -448,45 +424,56 @@ class bedavailable extends State<data>{
                             )
                           ],
                         ),
-                      ],
+                        updatefields("No. of lower bed's  :",1),
+                        updatefields("No. of middle bed's:",2),
+                        updatefields("No. of upper bed's  :",3),
+                        ],
                     ),
                   )
-              ),
-            ),
+                 ),
+                ),
+                ),
+                ),
             contentPadding: EdgeInsets.all(5.0),
             actions: <Widget>[
               new MaterialButton(
                 child: Text(button),
                 onPressed: () {
                   if(button=='Save') {
-                    Navigator.of(context).pop();
-                    Firestore.instance.collection(center).document('room').
-                    collection('data').document(doc).updateData({
-                      "lowerberth" : lb1,
-                      "middleberth" : mb1,
-                      "upperberth" :ub1,
-                    });
-                    lowerberth.clear();
-                    upperberth.clear();
-                    middleberth.clear();
-                  }
+                    var db =  Firestore.instance.collection(center).document('room');
+                    if(rname==roomname.text){
+                      db.collection('data').document(rname).updateData({
+                          "lowerberth" : lb1,
+                          "middleberth" : mb1,
+                          "upperberth" :ub1,
+                        });
+                        }
+                    else{
+                        db.collection('data').document(doc).delete().then((value){
+                          db.collection('data').document(rname).setData({
+                          "lowerberth" : lb1,
+                          "middleberth" : mb1,
+                          "upperberth" :ub1,
+                        });
+                        });
+                      }
+                        lowerberth.clear();
+                        upperberth.clear();
+                        middleberth.clear();
+                        roomname.clear();
+                        Navigator.of(context).pop();
+                    }
                   else{
-                    updates(lb1, mb1, ub1).
-                    then((value) {
-                      setState(() {
-                        addroom();
-                        roomslist.add(rooms('Room$rcount',lb1,mb1,ub1,index,index));
-                        rcount++;
-                        lb = lb+num.parse(lowerberth.text);
-                        mb = mb+num.parse(middleberth.text);
-                        ub = ub+num.parse(upperberth.text);
-                        count=lb+mb+ub;
-                      });
+                    setState(() {
+                       updates(rname,lb1, mb1, ub1);
+                         roomslist.add(rooms(roomname.text,num.parse(lowerberth.text),
+                      num.parse(middleberth.text),num.parse(upperberth.text)));
                       lowerberth.clear();
                       upperberth.clear();
                       middleberth.clear();
+                      roomname.clear();
                     });
-                    Navigator.of(context).pop();
+                      Navigator.of(context).pop();
                   }
                 },
                 padding: EdgeInsets.all(9),
@@ -497,9 +484,6 @@ class bedavailable extends State<data>{
           );
         });
   }
-
-
-
 
   @override
   void initState(){
@@ -632,8 +616,7 @@ class bedavailable extends State<data>{
                          icon: Icon(Icons.add_circle,color: Colors.green[900],),
                          iconSize: 55,
                          onPressed: (){
-                            num temp = rcount+1;
-                            updatedata(context,'Room-$temp','Add','no');
+                            updatedata(context,'Add room','Add','no');
                          },
                        ),
                        SizedBox(width: 25,)

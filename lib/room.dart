@@ -1,5 +1,5 @@
 import 'dart:ui';
-import 'package:cloud_firestore/cloud_firestore.dart';
+// import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -161,13 +161,13 @@ class roomdata extends State<room>{
     return Row(
         children: [
           Expanded(
-              child: lb==0?MaterialButton():beds(Colors.green[900],'lb-$lb')
+              child: lb==0?MaterialButton(onPressed: (){},):beds(Colors.green[900],'lb-$lb')
           ),
           Expanded(
-              child: mb==0?MaterialButton():beds(Colors.green[900],'mb-$mb')
+              child: mb==0?MaterialButton(onPressed: (){}):beds(Colors.green[900],'mb-$mb')
           ),
           Expanded(
-              child: ub==0?MaterialButton():beds(Colors.green[900],'ub-$ub')
+              child: ub==0?MaterialButton(onPressed: (){}):beds(Colors.green[900],'ub-$ub')
           ),
         ]
     );
@@ -209,7 +209,6 @@ class roomdata extends State<room>{
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     greatest(nlb,nmb,nub);
     smallests(nlb,nmb,nub);
