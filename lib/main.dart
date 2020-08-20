@@ -3,7 +3,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:folkguideapp/mainpage.dart';
+
+import 'mainpage.dart';
+// import 'package:folkguideapp/mainpage.dart';
 // import 'package:folkguideapp/room.dart';
 
 void main() {
@@ -29,13 +31,17 @@ class myapp extends StatefulWidget {
 // ignore: camel_case_types
 class authentication extends State<myapp> {
   List<String> centers = [];
-  String selectedcenter='Center1';
+  String selectedcenter='Mumbai';
+  TextEditingController phoneno = TextEditingController();
+  String no = '0';
+  String center,error='';
+
 
   Future<void> getcenters() async{
-    var db = await Firestore.instance.collection('centers').getDocuments();
+    var db = await Firestore.instance.collection('Centers').getDocuments();
     db.documents.forEach((element){
       setState(() {
-        centers.add(element.documentID.toString());
+        centers.add(element.data['centre']);
       });
     });
   }
@@ -77,6 +83,29 @@ class authentication extends State<myapp> {
       children: centerlist,
     );
   }
+
+  Future fgaccess(String n,String centre,BuildContext context) async{
+    String val='';
+     var auth = await Firestore.instance.collection('FOLKGuides').where('mobile_number',isEqualTo:n).
+     where('centre_name_list',arrayContains: centre).getDocuments();
+     auth.documents.forEach((element) {
+        setState((){
+       val = element.data['mobile_number'];
+        });
+      });
+       if(val==n){
+       Navigator.push(context, MaterialPageRoute(builder:(context)=>mainpage(center: selectedcenter,)));
+     }
+     else{
+         setState((){
+             error = 'access denied';
+             phoneno.clear();
+           });
+  }
+  
+     
+
+  }
   
   @override
   void initState() {
@@ -94,7 +123,7 @@ class authentication extends State<myapp> {
           child: SingleChildScrollView(
             child: Center(
               child:Padding(
-                padding: EdgeInsets.all(60),
+                padding: EdgeInsets.all(45),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -106,14 +135,41 @@ class authentication extends State<myapp> {
                         fontSize: 30,
                       ),),
                     SizedBox(height:80,),
+                    Text(error,
+                    style: TextStyle(
+                      color: Colors.red
+                      ),),
+                    TextField(
+                      maxLength: 10,
+                      maxLines: 1,
+                      controller: phoneno,
+                      cursorColor: Colors.green[900],
+                      onChanged: (value){
+                        this.no =value;
+                      },
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        fillColor: Colors.white,
+                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(5),
+                        borderSide: BorderSide(color: Colors.green[900])),
+                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(5),
+                        borderSide: BorderSide(color: Colors.green[900])),
+                      
+                        labelText: 'Phone number',
+                        labelStyle: TextStyle(
+                          color: Colors.green[900]
+                        )
+                      ),
+                      ),
+                    SizedBox(height: 5),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Expanded(
                           child: Row(
                             children: [
-                              Expanded(
-                                child:SizedBox(width: 3,) ,),
+                              // Expanded(
+                              //   child:SizedBox(width: 1,) ,),
                               Text('Select your center  ',
                                   style: TextStyle(
                                       color: Colors.black,
@@ -125,9 +181,9 @@ class authentication extends State<myapp> {
                                 color: Colors.white,
                                 child: Platform.isIOS ? iOSPicker() : androidDropdown(),
                               ),
-                              Expanded(
-                                child:SizedBox(width: 3,)
-                                ,),
+                              // Expanded(
+                              //   child:SizedBox(width: 1,)
+                              //   ,),
                             ],
                           ),
                         )
@@ -143,7 +199,8 @@ class authentication extends State<myapp> {
                       color: Colors.green[900],
                       shape: new RoundedRectangleBorder(borderRadius:BorderRadius.circular(15)),
                       onPressed: (){
-                        Navigator.push(context, MaterialPageRoute(builder:(context)=>mainpage(center: selectedcenter,)));
+                        fgaccess(no,selectedcenter, context);
+                        // Navigator.push(context, MaterialPageRoute(builder:(context)=>mainpage(center: selectedcenter,)));
                       },
                     )
                   ],
