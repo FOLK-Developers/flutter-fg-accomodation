@@ -5,7 +5,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+// import 'package:folkguideapp/forwardreq.dart';
 import 'package:intl/intl.dart';
+
+import 'forwardreq.dart';
 // ignore: camel_case_types
 class allocation extends StatefulWidget{
   allocation({this.center});
@@ -18,6 +21,7 @@ class allocation extends StatefulWidget{
 class allocationpage extends State<allocation>{
   allocationpage({this.center});
   final String center;
+  String zone;
   num lb=0,mb=0,ub=0,rlb=0,rmb=0,rub=0,count=0,totalr=0,prob=0,allocs=0,alb=0,amb=0,aub=0;
   bool flag=false;
   String note="Loading..",note1="Loading..",req="Loading..";
@@ -517,6 +521,7 @@ class allocationpage extends State<allocation>{
       void initState(){
       super.initState();
 //       bedData();
+         zone = center;
       }
 
       @override
@@ -526,7 +531,7 @@ class allocationpage extends State<allocation>{
             body:Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
-                    Expanded(child:requestlist()),
+                    Expanded(child:requestlist(center: center,)),
                     Container(
                       height: 50,
                       color: Colors.transparent,
@@ -579,6 +584,8 @@ class allocationpage extends State<allocation>{
 // ignore: must_be_immutable
 // ignore: camel_case_types
 class requestlist extends StatelessWidget{
+  requestlist({this.center});
+  final String center;
   static DateTime now = DateTime.now();
   static var  formatter = DateFormat('yyyy-MM-dd');
   static var today = formatter.format(now);
@@ -645,7 +652,7 @@ class requestlist extends StatelessWidget{
                                       SizedBox(height: 7.0,),
                                       Text("Requested "+
                                           document['preferred_berth'].toString().toLowerCase()
-                                          +" for "+today,
+                                          +" for "+document['Date'],
                                         style: TextStyle(
                                             color: Colors.black,
                                             fontSize: 12
@@ -686,6 +693,8 @@ class requestlist extends StatelessWidget{
                         color: Colors.green[900],
                         icon: Icons.priority_high,
                         onTap: (){
+                        
+                        
                           },
                       ),
                       IconSlideAction(
@@ -693,7 +702,12 @@ class requestlist extends StatelessWidget{
                         color: Colors.green[700],
                         icon: Icons.forward,
                         onTap: (){
-                          },
+                        Navigator.push(context, MaterialPageRoute(builder: (context)=>
+                        forwardreq(berth: document['preferred_berth'],phone:document['Mobile_Number'],
+                        message: document['Message']=='No message'? "" :"Message :" + document['Message'],uname: 
+                        document['Folkname'],from:document['Date'],to:document['Date'],profile: images.elementAt(2).toString(),
+                        center:center )));                         
+                         },
                       ),
                     ],);
             }).toList()

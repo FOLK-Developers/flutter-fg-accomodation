@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-
+// import 'package:folkguideapp/forwardreq.dart';
 import 'mainpage.dart';
 // import 'package:folkguideapp/mainpage.dart';
 // import 'package:folkguideapp/room.dart';
@@ -34,7 +34,7 @@ class authentication extends State<myapp> {
   String selectedcenter='Mumbai';
   TextEditingController phoneno = TextEditingController();
   String no = '0';
-  String center,error='';
+  String center='',error='';
 
 
   Future<void> getcenters() async{
@@ -168,22 +168,22 @@ class authentication extends State<myapp> {
                         Expanded(
                           child: Row(
                             children: [
-                              // Expanded(
-                              //   child:SizedBox(width: 1,) ,),
+                              Expanded(
+                                child:SizedBox(width: 1,) ,),
                               Text('Select your center  ',
                                   style: TextStyle(
                                       color: Colors.black,
                                       fontSize: 16
                                   ),),
                               Container(
-                                width:80,
+                                width:100,
                                 height:30,
                                 color: Colors.white,
                                 child: Platform.isIOS ? iOSPicker() : androidDropdown(),
                               ),
-                              // Expanded(
-                              //   child:SizedBox(width: 1,)
-                              //   ,),
+                              Expanded(
+                                child:SizedBox(width: 1,)
+                                ,),
                             ],
                           ),
                         )

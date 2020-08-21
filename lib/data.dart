@@ -20,7 +20,7 @@ class bedavailable extends State<data>{
   bedavailable({this.center});
   final String center;
   num lb=0,mb=0,ub=0,rlb=0,rmb=0,rub=0,count=0,totalr=0,prob=0,allocs=0,alb=0,amb=0,aub=0;
-  String location='',admin='',rname='';
+  String location='',admin='',rname='',doc='';
   num ub1=0,lb1=0,mb1=0,rcount=0,index=0;
   String note="",note1="",tallocs="";
   static DateTime now = DateTime.now();
@@ -118,14 +118,14 @@ class bedavailable extends State<data>{
   // ignore: missing_return
   Future<void> updates(String rn,num l,num m,num b) async{
     setState(() async {
-      var collectionRef =  Firestore.instance.collection(center).document('room');
-      var addroom =  collectionRef.collection('data');
-      var db = await collectionRef.get();
+      var centerdoc =  Firestore.instance.collection('Centers').document(doc);
+      var addroom = centerdoc.collection('data');
+      var db = await centerdoc.get();
       rcount = db.data['roomcount'];
       if(rcount==null){
-       collectionRef.setData({
+       centerdoc.setData({
           'roomcount' : 1 
-       }).then((value) {
+       },merge: true).then((value) {
           addroom.document(rn).setData({
         'lowerberth':l,
         'middleberth':m,
@@ -140,7 +140,7 @@ class bedavailable extends State<data>{
         'middleberth':m,
         'upperberth':b
       }).then((value) {
-          collectionRef.updateData({
+          centerdoc.updateData({
             'roomcount': rcount
           });
           });
@@ -150,7 +150,7 @@ class bedavailable extends State<data>{
 
 
 
-  Future<bool> question(BuildContext context,String field,String text,String doc) {
+  Future<bool> question(BuildContext context,String field,String text,String ddoc) {
     return showDialog(
         context: context,
         barrierDismissible: false,
@@ -184,12 +184,12 @@ class bedavailable extends State<data>{
                           fontWeight: FontWeight.bold
                       ),),
                     onPressed: () async{
-                      var collection = Firestore.instance.collection(center).document('room');
+                      var collection = Firestore.instance.collection('Centers').document(doc);
                                 var db = await collection.get();
                                 num temp = await db.data['roomcount'];  
                                 temp = temp-1;
                                  collection.collection('data')
-                                    .document(doc).delete().then((value) {
+                                    .document(ddoc).delete().then((value) {
                                        collection.updateData({
                                       'roomcount': temp
                                       });
@@ -308,20 +308,30 @@ class bedavailable extends State<data>{
 //   ignore: missing_return
   Future<void> addroom() async{
     num temp1=0,temp2=0,temp3=0;
+    String flag='';
     roomslist.clear();
-    var collectionRef = Firestore.instance.collection(center);
-    var addroom = await collectionRef.document('room').collection('data').getDocuments();
-    var adminstrator = await Firestore.instance.collection('centers').document(center).get();
-    setState(() {
-           addroom.documents.forEach((roomN) {
+    var collectionRef = await Firestore.instance.collection('Centers').where('centre',isEqualTo:center).getDocuments();
+      collectionRef.documents.forEach((element) {
+        flag = element.documentID;
+      });
+      setState((){
+        doc = flag;
+    });
+
+    var centerdoc = await Firestore.instance.collection('Centers').document(doc).collection('data').where('lowerberth',isGreaterThan:0)
+    .getDocuments();
+    var db = await Firestore.instance.collection('Centers').document(doc).get();
+
+            centerdoc.documents.forEach((roomN) {
               temp1 = temp1 + roomN.data['lowerberth'];
               temp2 = temp2 + roomN.data['middleberth'];
               temp3 = temp3 + roomN.data['upperberth'];
               roomslist.add(rooms(roomN.documentID, roomN.data['lowerberth'],
                   roomN.data['middleberth'], roomN.data['upperberth']));
             });
-      admin =  adminstrator.data['admin'];
-      location = adminstrator.data['Location'];
+    setState((){
+      // admin =  db.data['admin'];
+      location = db.data['centre'];
       lb = temp1;
       mb = temp2;
       ub = temp3;
@@ -377,7 +387,7 @@ class bedavailable extends State<data>{
 
 
 
-  Future<bool> updatedata(BuildContext context,String text,String button,String doc) {
+  Future<bool> updatedata(BuildContext context,String text,String button,String edoc) {
     return showDialog(
         context: context,
         barrierDismissible: false,
@@ -440,9 +450,9 @@ class bedavailable extends State<data>{
                 child: Text(button),
                 onPressed: () {
                   if(button=='Save') {
-                    var db =  Firestore.instance.collection(center).document('room');
-                    if(rname==roomname.text){
-                      db.collection('data').document(rname).updateData({
+                    var db =  Firestore.instance.collection('Centers').document(doc);
+                    if(rname==edoc){
+                      db.collection('data').document(edoc).updateData({
                           "lowerberth" : lb1,
                           "middleberth" : mb1,
                           "upperberth" :ub1,
@@ -485,9 +495,12 @@ class bedavailable extends State<data>{
         });
   }
 
+  
+
   @override
   void initState(){
     super.initState();
+   
     addroom();
   }
 
