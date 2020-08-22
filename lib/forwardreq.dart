@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:folkguideapp/data.dart';
 import 'package:folkguideapp/mainpage.dart';
 
 // ignore: camel_case_types
@@ -23,7 +22,6 @@ class forward extends State<forwardreq>{
   final String berth,uname,message,phone,center,from,to,profile;
   List<String> centers = [];
   String selectedcenter='Mumbai',fgmessage;
-  bedavailable b = bedavailable();
   TextEditingController fgmessages = TextEditingController();
 
   Future<void> getcenters() async{
@@ -83,16 +81,17 @@ class forward extends State<forwardreq>{
       Row namefields(String field,String value){
     return Row(
       children: <Widget>[
-        Text(field+":",
+        Text(field+" :",
           style: TextStyle(
               color: Colors.black,
-              fontSize: 16
+              fontSize: 15,
+              fontWeight: FontWeight.bold
           ),),
         SizedBox(width:3,),
         Text(value,
           style: TextStyle(
               color: Colors.black,
-              fontSize:16
+              fontSize:14
           ),),
       ],
     );
@@ -150,15 +149,15 @@ class forward extends State<forwardreq>{
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         SizedBox(height: 7,),
-                        b.namefields('user name',uname),
+                        namefields('Name',uname),
                         SizedBox(height: 7,),
-                        b.namefields('preferred berth',berth),
+                        namefields('Preferred berth',berth),
                         SizedBox(height: 7,),
-                        b.namefields('date','from $from to $to'),
+                        namefields('Date','from $from to $to'),
                         SizedBox(height: 7,),
-                        b.namefields('message',message),
+                        namefields('Phone Number',phone), 
                         SizedBox(height: 7,),
-                        b.namefields('Phone Number',phone),
+                        namefields(message=='No messsage'?'':'Message',message=='No messsage'?'':message),
                         ],
                         )
                   ,),
@@ -172,14 +171,15 @@ class forward extends State<forwardreq>{
                        fgmessage = value;
                       },
                       decoration: InputDecoration(
+                        contentPadding: EdgeInsets.all(7),
                         fillColor: Colors.white,
-                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(5),
-                        borderSide: BorderSide(color: Colors.green[900])),
+                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: Colors.black)),
                         enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(5),
-                        borderSide: BorderSide(color: Colors.green[900])),
-                        labelText: 'message',
+                        borderSide: BorderSide(color: Colors.black)),
+                        labelText: 'Message',
                         labelStyle: TextStyle(
-                          color: Colors.green[900]
+                          color: Colors.black
                         )
                       ),
                       )
@@ -189,11 +189,11 @@ class forward extends State<forwardreq>{
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                        Expanded(child: SizedBox(width:2),),
-                       Text('Forward to:',
+                       Text('Forward to :',
                         style: TextStyle(
                           fontSize: 16
                         ),),
-                       Container(
+                       Container( 
                                 width:100,
                                 height:30,
                                 color: Colors.white,
@@ -213,7 +213,7 @@ class forward extends State<forwardreq>{
                           color: Colors.white,
                         ),),
                       color: Colors.green[900],
-                      shape: new RoundedRectangleBorder(borderRadius:BorderRadius.circular(7)),
+                      shape: new RoundedRectangleBorder(borderRadius:BorderRadius.circular(15)),
                       onPressed: (){
                       },
                     ),

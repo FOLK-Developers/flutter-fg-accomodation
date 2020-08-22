@@ -451,16 +451,16 @@ class bedavailable extends State<data>{
                 onPressed: () {
                   if(button=='Save') {
                     var db =  Firestore.instance.collection('Centers').document(doc);
-                    if(rname==edoc){
-                      db.collection('data').document(edoc).updateData({
+                    if(edoc==rname){
+                       db.collection('data').document(edoc).updateData({
                           "lowerberth" : lb1,
                           "middleberth" : mb1,
                           "upperberth" :ub1,
                         });
                         }
                     else{
-                        db.collection('data').document(doc).delete().then((value){
-                          db.collection('data').document(rname).setData({
+                        db.collection('data').document(edoc).delete().then((value) async{
+                          await db.collection('data').document(rname).setData({
                           "lowerberth" : lb1,
                           "middleberth" : mb1,
                           "upperberth" :ub1,

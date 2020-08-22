@@ -8,6 +8,7 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 // import 'package:folkguideapp/forwardreq.dart';
 import 'package:intl/intl.dart';
 
+import 'callocation.dart';
 import 'forwardreq.dart';
 // ignore: camel_case_types
 class allocation extends StatefulWidget{
@@ -693,9 +694,12 @@ class requestlist extends StatelessWidget{
                         color: Colors.green[900],
                         icon: Icons.priority_high,
                         onTap: (){
-                        
-                        
-                          },
+                           Navigator.push(context, MaterialPageRoute(builder: (context)=>
+                        callocation(berth: document['preferred_berth'],phone:document['Mobile_Number'],
+                        message: document['Message'],uname: 
+                        document['Folkname'],from:document['Date'],to:document['Date'],profile: images.elementAt(2).toString(),
+                        center:center )));  
+                        },
                       ),
                       IconSlideAction(
                         caption: 'Forward',
@@ -704,7 +708,7 @@ class requestlist extends StatelessWidget{
                         onTap: (){
                         Navigator.push(context, MaterialPageRoute(builder: (context)=>
                         forwardreq(berth: document['preferred_berth'],phone:document['Mobile_Number'],
-                        message: document['Message']=='No message'? "" :"Message :" + document['Message'],uname: 
+                        message: document['Message'],uname: 
                         document['Folkname'],from:document['Date'],to:document['Date'],profile: images.elementAt(2).toString(),
                         center:center )));                         
                          },
