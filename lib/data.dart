@@ -12,13 +12,14 @@ class data extends StatefulWidget{
   data({this.center});
   final String center;
   @override
-  bedavailable createState()=>bedavailable(center: center);
+  bedavailable createState()=>bedavailable(center: center,type: false);
 }
 
 // ignore: camel_case_types
 class bedavailable extends State<data>{
-  bedavailable({this.center});
+  bedavailable({this.center,this.type});
   final String center;
+  final bool type;
   num lb=0,mb=0,ub=0,rlb=0,rmb=0,rub=0,count=0,totalr=0,prob=0,allocs=0,alb=0,amb=0,aub=0;
   String location='',admin='',rname='',doc='';
   num ub1=0,lb1=0,mb1=0,rcount=0,index=0;
@@ -209,7 +210,7 @@ class bedavailable extends State<data>{
 
 
 
-  Container rooms(String rn,num l,num m,num u){
+  Container rooms(String rn,num l,num m,num u,bool flag){
     return Container(
       child: Column(
         crossAxisAlignment:CrossAxisAlignment.stretch,
@@ -245,9 +246,10 @@ class bedavailable extends State<data>{
                           child:SizedBox(width: 40,),
                         ),
                         IconButton(
-                          icon: Icon(Icons.edit,color: Colors.black,),
+                          icon: Icon(Icons.edit,color:flag==false?Colors.black:Colors.transparent),
                           onPressed: (){
-                            setState(() {
+                            if(!flag){
+                              setState(() {
                               lowerberth.text = l.toString();
                               upperberth.text = u.toString();
                               middleberth.text = m.toString();
@@ -260,17 +262,20 @@ class bedavailable extends State<data>{
                                 addroom();
                               });
                             });
+                            }
                           },
                         ),
                         IconButton(
-                          icon: Icon(Icons.delete_forever,color: Colors.black,),
+                          icon: Icon(Icons.delete_forever,color:flag==false?Colors.black:Colors.transparent),
                           onPressed: (){
-                            setState(() {
+                              if(!flag){
+                              setState(() {
                             question(context,'Remove, $rn','Do you really want to remove ,$rn.',rn).
                             then((value) {
                                 addroom();
                               });
                             });
+                            }
                             },
                         ),
                       ],
@@ -327,7 +332,7 @@ class bedavailable extends State<data>{
               temp2 = temp2 + roomN.data['middleberth'];
               temp3 = temp3 + roomN.data['upperberth'];
               roomslist.add(rooms(roomN.documentID, roomN.data['lowerberth'],
-                  roomN.data['middleberth'], roomN.data['upperberth']));
+                  roomN.data['middleberth'], roomN.data['upperberth'],type));
             });
     setState((){
       // admin =  db.data['admin'];
@@ -339,6 +344,8 @@ class bedavailable extends State<data>{
     });
   }
 
+
+  
 
 
           Row updatefields(String ftext,num n){
@@ -477,7 +484,7 @@ class bedavailable extends State<data>{
                     setState(() {
                        updates(rname,lb1, mb1, ub1);
                          roomslist.add(rooms(roomname.text,num.parse(lowerberth.text),
-                      num.parse(middleberth.text),num.parse(upperberth.text)));
+                      num.parse(middleberth.text),num.parse(upperberth.text),type));
                       lowerberth.clear();
                       upperberth.clear();
                       middleberth.clear();
@@ -553,7 +560,7 @@ class bedavailable extends State<data>{
                      ),
                    ),
                    Container(
-                     padding: EdgeInsets.all(17),
+                     padding: EdgeInsets.all(12),
                      height: 290,
                      alignment: Alignment.topCenter,
                      child: Material(

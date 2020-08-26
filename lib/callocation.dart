@@ -1,9 +1,9 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:folkguideapp/date_picker_timeline.dart';
 import 'package:folkguideapp/mainpage.dart';
+
+import 'beds.dart';
 
 // ignore: camel_case_types
 class callocation extends StatefulWidget{
@@ -13,7 +13,7 @@ class callocation extends StatefulWidget{
   
    @override
    custom_allocation createState()=>custom_allocation(berth: berth,
-     uname: uname,message: message,phone: phone,center: center,from:from,to:to);
+     uname:uname,message: message,phone: phone,center: center,from:from,to:to);
 }
 // ignore: camel_case_types
 class custom_allocation extends State<callocation>{
@@ -21,119 +21,187 @@ class custom_allocation extends State<callocation>{
   this.from,this.to,this.center});
   final String berth,profile,uname,message,phone,center,from,to;
   String lroomn;
-  bool choose=false;
-  num count=0;
-  String fgmessage,doc,selected='';
+  bool count;
+  String fgmessage,doc,selected='No,room selected';
+  String note='Select a Room from below given list.';
   TextEditingController fgmessages = TextEditingController();
-  List<Row> rooms=[];
-  num i=0;
+  List<Container> room = [];
+  Color color= Colors.transparent;
+  List<num> temp = [];
+  String lrn;
+  num li=0;
+  num lower,middle,upper;
+ 
+  
 
 
 
-  Row namefields(String field,String value){
-    return Row(
+   Column details(String field,num n){
+    return Column(
       children: <Widget>[
-        Text(field+" :",
+        Text(field,
           style: TextStyle(
               color: Colors.black,
-              fontSize: 15,
-              fontWeight: FontWeight.bold
+              fontSize: 15
           ),),
-        SizedBox(width:3,),
-        Text(value,
+        SizedBox(height: 6,),
+        Text(n.toString(),
           style: TextStyle(
-              color: Colors.black,
-              fontSize:14
+              color: Colors.green[900],
+              fontSize:15
           ),),
       ],
     );
   }
 
-   Container beds(String roomn,String berth,num lb,num mb,num ub,int i){
-    return Container(
-      height: 100,
-      child: Material(
-        shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(17)
-          ),
-        elevation :30,      
-      child:MaterialButton(
-      padding: EdgeInsets.symmetric(horizontal: 7,vertical: 7),
-      onPressed: (){
-        setState(() { 
-          if(selected=='$roomn-$berth' && count==1){
-          count=0;  
-          selected = '';
-          rooms.removeAt(i);
-          rooms.insert(i,addbeds(roomn,lb,mb,ub,i));
-          }
-          else if(count==0 ){
-          selected = '$roomn-$berth';
-          rooms.removeAt(i);
-          rooms.insert(i,addbeds(roomn,lb,mb,ub,i));
-          count++;
-          choose=true;
-         }
 
-       
-        });
-      },
-      child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Icon(Icons.check,color:selected=='$roomn-$berth'?Colors.green[900]:
-                  Colors.transparent
-                  ,size: 45
-                  ,),
-              SizedBox(height: 6,),
-              Text('$roomn',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 10,
-                fontWeight: FontWeight.bold
-                ),),
-                SizedBox(height: 1),
-                SizedBox(height: 1,
-                child: Container(
-                  color: Colors.black
-                ),),
-                SizedBox(height: 1),
-                Text('$berth',
-                textAlign: TextAlign.center,
+
+
+  Row namefields(String field,String value,){
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        SizedBox(width:10),
+        Text(field+":",
+          style: TextStyle(
+              color: Colors.black,
+              fontSize: 13,
+              fontWeight: FontWeight.bold
+          ),),
+        SizedBox(width:1,),
+        Expanded(
+          child:Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children:<Widget>[
+              Text(value,
                 style: TextStyle(
-                color: Colors.black,
-                fontSize: 9,
-                fontWeight: FontWeight.bold
-                ),),
-                ],
+                    color: Colors.black,
+                    fontSize: 13,
+                  ),
+                ),
+            ]
           )
         ),
-    )
+      ],
     );
   }
 
-  Row addbeds(String roomn,num lb,num mb,num ub,int i) {
-    return  Row(children: [
-                 Expanded(
-                   child: lb==0?MaterialButton(onPressed: (){},):beds(roomn,'lower berth',lb,mb,ub,i)
+  Container rooms(String rn,num l,num m,num u,num i){
+    return Container(
+      child: Column(
+        crossAxisAlignment:CrossAxisAlignment.stretch,
+        children: [
+          Material(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            color: Colors.white,
+            elevation: 30,
+            child: FlatButton(
+              onPressed: (){
+                setState(() {
+                  if(count==false){
+                      room.removeAt(i);
+                      selected = rn;
+                      room.insert(i,rooms(rn,l,m,u,i));
+                      temp.add(l);
+                      temp.add(m);
+                      temp.add(u);
+                      li = i;
+                      lrn=rn;
+                      count=true;
+                      lower=l;
+                      middle=m;
+                      upper=u;
+                  }
+                  else if(count==true && selected==rn){
+                      room.removeAt(li);
+                      selected='No,room selected';
+                      room.insert(li,rooms(rn,l,m,u,i));
+                      temp.clear();
+                      li=0;
+                      lrn=rn;
+                      count=false;
+                  }
+                  else if(count==true && selected!=rn){
+                      selected = rn;
+                      room.removeAt(li);
+                      room.insert(li,rooms(lrn,temp.elementAt(0), temp.elementAt(1),temp.elementAt(2), li));
+                      room.removeAt(i);
+                      room.insert(i,rooms(rn,l,m,u,i));
+                      li=i;
+                      temp.add(l);
+                      temp.add(m);
+                      temp.add(u);
+                      lrn=rn;
+                      count=true;
+                      lower=l;
+                      middle=m;
+                      upper=u;
+                  }
+                  
+                });
+                
+                },
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal:1,vertical:5),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                      Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        SizedBox(width: 10,),
+                        Text(rn,
+                          style: TextStyle(
+                              color: Colors.black,
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold
+                          ),),
+                        Expanded(
+                          child:SizedBox(width: 40,),
+                        ),
+                       Icon(Icons.check_circle_outline,color:selected==rn?Colors.green[900]:Colors.transparent)
+                        ],
+                    ),
+                    SizedBox(height: 5,),
+                    Row(
+                      children: [
+                        Expanded(
+                          child:details('lower berth', l),
+                        ),
+                        Expanded(
+                            child: details('middle berth', m)
+                        ),
+                        Expanded(
+                            child: details('upper berth', u)
+                        ),
+                      ],
+                    )
+                  ],
                 ),
-                SizedBox(width: 7),
-                Expanded(
-                    child: mb==0?MaterialButton(onPressed: (){},):beds(roomn,'middle berth',lb,mb,ub,i)
-                ),
-                SizedBox(width: 7),
-                Expanded(
-                    child: ub==0?MaterialButton(onPressed: (){},):beds(roomn,'upper berth',lb,mb,ub,i)
-                ),
-               ],);
+              ),
+            ),
+          ),
+          Material(
+            color: Colors.transparent,
+            child: SizedBox(
+              height: 5,
+            ),
+          )
+        ],
+      ),
+    );
   }
 
 
-   Future<void> addroom() async{
+  Future<void> addroom() async{
     String flag;
-    rooms.clear();
+    num i=0;
+    room.clear();
     var collectionRef = await Firestore.instance.collection('Centers').where('centre',isEqualTo:center).getDocuments();
       collectionRef.documents.forEach((element) {
         flag = element.documentID;
@@ -142,22 +210,17 @@ class custom_allocation extends State<callocation>{
         doc = flag;
     });
 
-    var centerdoc = await Firestore.instance.collection('Centers').document(doc).collection('data').
-    where('lowerberth',isGreaterThanOrEqualTo:0)
+    var centerdoc = await Firestore.instance.collection('Centers').document(doc).collection('data').where('lowerberth',isGreaterThan:0)
     .getDocuments();
             centerdoc.documents.forEach((roomN) {
               setState(() {
-                 rooms.add(addbeds(roomN.documentID, roomN.data['lowerberth'],
-                  roomN.data['middleberth'], roomN.data['upperberth'],i));
-                  rooms.add(Row(
-                   children: [
-                     SizedBox(height: 3,)
-                   ],
-                  ));
-                  i=i+2;
+                room.add(rooms(roomN.documentID, roomN.data['lowerberth'],
+                  roomN.data['middleberth'], roomN.data['upperberth'],i++));
                 });
-            });
-   }
+          });
+    }
+
+  
 
 
   
@@ -165,6 +228,10 @@ class custom_allocation extends State<callocation>{
   void initState() {
     super.initState();
     addroom();
+    setState(() {
+      count=false;
+    });
+    
   }
 
 
@@ -196,115 +263,134 @@ class custom_allocation extends State<callocation>{
             ),),
             centerTitle: true,
           ),
-          body: Scrollbar(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical:10,horizontal:25),
-                child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Container(
-                                      alignment: Alignment.center,
-                                      child:CircleAvatar(
-                                        backgroundImage: NetworkImage('https://firebasestorage.googleapis.com/v0/b/folkapp'
-                                      '-a0871.appspot.com/o/pexels-sourav-mishra-1149831.jpg?alt=media&token=cf023b19-'
-                                      'f06e-4e64-baaa-d7d2398bf0b6'),
-                                        backgroundColor: Colors.green[900],
-                                        radius: 45,
+          body: Padding(
+                padding: EdgeInsets.symmetric(vertical:2,horizontal:2),
+                      child:Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Expanded(
+                            child:Scrollbar(
+                              child: SingleChildScrollView(
+                                child:Padding(
+                              padding: EdgeInsets.symmetric(vertical:2,horizontal:8),
+                              child: Column(
+                              children:<Widget>[
+                              Container(
+                              alignment: Alignment.topCenter,
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(horizontal:5,vertical:5),
+                                child: Material(
+                                elevation:40,
+                                shape:RoundedRectangleBorder(borderRadius: BorderRadius.circular(35)),
+                                child:Padding(
+                                  padding: EdgeInsets.all(15),
+                                  child:  Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                  children: [
+                                    SizedBox(height:8),
+                                    Container(
+                                              alignment: Alignment.center,
+                                              child:CircleAvatar(
+                                                backgroundImage: NetworkImage('https://firebasestorage.googleapis.com/v0/b/folkapp'
+      '-a0871.appspot.com/o/pexels-sourav-mishra-1149831.jpg?alt=media&token=cf023b19-f06e-4e64-baaa-d7d2398bf0b6'),
+                                                backgroundColor: Colors.green[900],
+                                                radius: 35,
+                                              ),
+                                            ),
+                                      SizedBox(height:8),
+                                      namefields('User-name', uname),
+                                      SizedBox(height:5),
+                                      namefields('Request','Requested $berth for $from to $to'),
+                                      SizedBox(height:5),
+                                      namefields('Phone number', phone),
+                                      SizedBox(height:5),
+                                      Row(
+                                              mainAxisAlignment: MainAxisAlignment.start,
+                                              crossAxisAlignment: CrossAxisAlignment.start,  
+                                              children: <Widget>[
+                                                SizedBox(width:10),
+                                                Column(
+                                                  children: [
+                                                    Text(message=='No message'?'':'Message :',
+                                                    style: TextStyle(
+                                                      color: Colors.black,
+                                                      fontSize: 14,
+                                                      fontWeight: FontWeight.bold
+                                                  ),
+                                                  )
+                                                  ],
+                                                ),
+                                                Expanded(
+                                                  child: Column(
+                                                  mainAxisAlignment: MainAxisAlignment.start,
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: <Widget>[
+                                                    Text(message=='No message'?'':message,
+                                                      style: TextStyle(
+                                                      color: Colors.black,
+                                                      fontSize: 13,
+                                                  ),
+                                                ),
+                                                ]
+                                              ),
+                                            ),
+                                          ],
+                                          ),
+                                          SizedBox(height:5),
+                                          namefields('Selected Room',selected)
+                                        ],
+                                        ),
+                                       )
                                       ),
+                                      )
                                     ),
-                  Container(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        SizedBox(height: 7,),
-                        namefields('Name',uname),
-                        SizedBox(height: 7,),
-                        namefields('Preferred berth',berth),
-                        SizedBox(height: 7,),
-                        namefields('Date','from $from to $to'),
-                        SizedBox(height: 7,),
-                        namefields('Phone Number',phone), 
-                        SizedBox(height: 7,),
-                        namefields(message=='No messsage'?'':'Message',message=='No messsage'?'':message),
-                        ],
-                        )
-                  ,),
-                  SizedBox(height: 20,),
-                  Column(
-                   children:rooms,),
-                  SizedBox(height:25,),
-                  Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text('From',
-                        style: TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.bold,
-                        fontSize:17,
-                        ),),
-                        DatePicker(
-                        DateTime.now(),
-                        onDateChange: (date) {
-                                // New date selected
-                                // print(date.day.toString());
-                         },
-                        ),
-                      ],
-                     ),
-                     SizedBox(height: 15,),
-                      Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                             Text('To',
-                            style: TextStyle(
-                            color: Colors.black,
-                            fontWeight: FontWeight.bold,
-                            fontSize:17,
-                            ),),
-                            SizedBox(height: 4,),
-                            DatePicker(
-                            DateTime.now(),
-                            onDateChange: (date) {
-                                    // New date selected
-                                    // print(date.day.toString());
-                            },
+                                    SizedBox(height: 10,),
+                                    Text(note,
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold
+                                      
+                                    ),),
+                                    SizedBox(height: 10,),
+                                    Padding(
+                                      padding:EdgeInsets.symmetric(horizontal:6),
+                                      child:Column(
+                                        children:room
+                                        ),
+                                        ),
+                                      ]
+                                    )
+                                   )
+                              )
+                            )
                             ),
-                            
+                          Container(
+                            // alignment:Alignment.bottomCenter,
+                            child:MaterialButton(
+                              child: Text('Next',
+                              style: TextStyle(
+                                color:Colors.white,
+                                fontSize:15,
+                                ),
+                                ),
+                              color: Colors.green[900],
+                              onPressed: (){
+                                if(count){
+                                     Navigator.push(context, MaterialPageRoute(builder: (context)=>bed(berth: berth,
+                                      uname: uname,message: message,phone: phone,from:from,to:to,
+                                      roomno:selected,centers: center,nlb:lower ,nmb:middle,nub:upper)));
+                                      }
+                                 },)
+                          )
                           ],
-                        ),
-                    SizedBox(height: 20,),
-                    Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                       namefields('Selected',selected)
-                    ],),
-                  SizedBox(height: 20,),
-                  Container(
-                     width:100,
-                     height: 40,
-                     child: MaterialButton(
-                      padding: EdgeInsets.all(5),
-                      child: Text('Allocate',
-                        style: TextStyle(
-                          color: Colors.white,
-                        ),),
-                      color: Colors.green[900],
-                      shape: new RoundedRectangleBorder(borderRadius:BorderRadius.circular(15)),
-                      onPressed: (){
-                      },
+                        )
+                      ),
                     ),
-                   )
-                 ]
-                ),
-              )
-             ),
-             ),
-      ),
-    );
-
-  }
-
-
+                  );
+                }
 }
+
+
+

@@ -23,6 +23,7 @@ class forward extends State<forwardreq>{
   List<String> centers = [];
   String selectedcenter='Mumbai',fgmessage;
   TextEditingController fgmessages = TextEditingController();
+  List<Container> ele = [];
 
   Future<void> getcenters() async{
     var db = await Firestore.instance.collection('Centers').getDocuments();
@@ -77,25 +78,175 @@ class forward extends State<forwardreq>{
   void initState() {
     super.initState();
     getcenters();
+    ele.add(Request());
     }
-      Row namefields(String field,String value){
+
+
+   Row namefields(String field,String value,){
     return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text(field+" :",
+        SizedBox(width:10),
+        Text(field+":",
           style: TextStyle(
               color: Colors.black,
-              fontSize: 15,
+              fontSize: 13,
               fontWeight: FontWeight.bold
           ),),
-        SizedBox(width:3,),
-        Text(value,
-          style: TextStyle(
-              color: Colors.black,
-              fontSize:14
-          ),),
+        SizedBox(width:1,),
+        Expanded(
+          child:Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children:<Widget>[
+              Text(value,
+                style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 13,
+                  ),
+                ),
+            ]
+          )
+        ),
       ],
     );
   }
+
+
+
+  // ignore: non_constant_identifier_names
+  Container Request(){
+    return  Container(
+                              alignment: Alignment.topCenter,
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(horizontal:5,vertical:5),
+                                child: Material(
+                                elevation:40,
+                                shape:RoundedRectangleBorder(borderRadius: BorderRadius.circular(35)),
+                                child:Padding(
+                                  padding: EdgeInsets.all(15),
+                                  child:  Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                  children: [
+                                    SizedBox(height:8),
+                                    Container(
+                                              alignment: Alignment.center,
+                                              child:CircleAvatar(
+backgroundImage: NetworkImage('https://firebasestorage.googleapis.com/v0/b/folkapp'
+      '-a0871.appspot.com/o/pexels-sourav-mishra-1149831.jpg?alt=media&token=cf023b19-f06e-4e64-baaa-d7d2398bf0b6'),                                                backgroundColor: Colors.green[900],
+                                                radius: 35,
+                                              ),
+                                            ),
+                                      SizedBox(height:8),
+                                      namefields('User-name', uname),
+                                      SizedBox(height:5),
+                                      namefields('Request','Requested $berth for $from to $to'),
+                                      SizedBox(height:5),
+                                      namefields('Phone number', phone),
+                                      SizedBox(height:5),
+                                      Row(
+                                              mainAxisAlignment: MainAxisAlignment.start,
+                                              crossAxisAlignment: CrossAxisAlignment.start,  
+                                              children: <Widget>[
+                                                SizedBox(width:10),
+                                                Column(
+                                                  children: [
+                                                    Text(message=='No message'?'':'Message :',
+                                                    style: TextStyle(
+                                                      color: Colors.black,
+                                                      fontSize: 14,
+                                                      fontWeight: FontWeight.bold
+                                                  ),
+                                                  )
+                                                  ],
+                                                ),
+                                                Expanded(
+                                                  child: Column(
+                                                  mainAxisAlignment: MainAxisAlignment.start,
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: <Widget>[
+                                                    Text(message=='No message'?'':message,
+                                                      style: TextStyle(
+                                                      color: Colors.black,
+                                                      fontSize: 13,
+                                                  ),
+                                                ),
+                                                ]
+                                              ),
+                                            ),
+                                          ],
+                                          ),
+                                          ],
+                                        ),
+                                       )
+                                      ),
+                                      )
+                                    );
+  }
+
+
+Container messages(){
+  return Container(
+    child: Padding(
+      padding: EdgeInsets.symmetric(horizontal:5,vertical:5),
+      child: Material(
+      shape: new RoundedRectangleBorder(borderRadius:BorderRadius.circular(35)),
+      elevation: 40,
+      child: Container(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal:10,vertical:12),
+          child: Column(
+            mainAxisAlignment:MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,     
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.close), 
+                    onPressed:(){
+                       setState(() {
+                         ele.removeLast();
+                       });
+                    })
+                    ],
+                  ),
+                   TextField(
+                      maxLines: 3,
+                      controller : fgmessages,
+                      onChanged:(value){
+                       fgmessage = value;
+                      },
+                      decoration: InputDecoration(
+                        contentPadding: EdgeInsets.all(7),
+                        fillColor: Colors.white,
+                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide(color: Colors.black)),
+                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide(color: Colors.black)),
+                        labelText: 'Message',
+                        labelStyle: TextStyle(
+                          color: Colors.black
+                        )
+                    ),
+                  ),
+                  ],     
+                  )
+                 )
+                ),
+              ) 
+          ),
+       );
+  }
+
+
+
+
+
+      
 
 
 
@@ -129,65 +280,40 @@ class forward extends State<forwardreq>{
           body: Scrollbar(
             child: SingleChildScrollView(
               child: Padding(
-                padding: EdgeInsets.all(40),
+                padding: EdgeInsets.symmetric(vertical:2,horizontal:2),
                 child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Container(
-                                      alignment: Alignment.center,
-                                      child:CircleAvatar(
-                                        backgroundImage: NetworkImage('https://firebasestorage.googleapis.com/v0/b/folkapp'
-                                      '-a0871.appspot.com/o/pexels-sourav-mishra-1149831.jpg?alt=media&token=cf023b19-'
-                                      'f06e-4e64-baaa-d7d2398bf0b6'),
-                                        backgroundColor: Colors.green[900],
-                                        radius: 45,
-                                      ),
-                                    ),
-                  Container(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        SizedBox(height: 7,),
-                        namefields('Name',uname),
-                        SizedBox(height: 7,),
-                        namefields('Preferred berth',berth),
-                        SizedBox(height: 7,),
-                        namefields('Date','from $from to $to'),
-                        SizedBox(height: 7,),
-                        namefields('Phone Number',phone), 
-                        SizedBox(height: 7,),
-                        namefields(message=='No messsage'?'':'Message',message=='No messsage'?'':message),
-                        ],
-                        )
-                  ,),
-                  SizedBox(height: 20,),
-                  Container(
-                    // height: 300,
-                    child: TextField(
-                      maxLines: 3,
-                      controller : fgmessages,
-                      onChanged:(value){
-                       fgmessage = value;
-                      },
-                      decoration: InputDecoration(
-                        contentPadding: EdgeInsets.all(7),
-                        fillColor: Colors.white,
-                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(color: Colors.black)),
-                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(5),
-                        borderSide: BorderSide(color: Colors.black)),
-                        labelText: 'Message',
-                        labelStyle: TextStyle(
-                          color: Colors.black
-                        )
-                      ),
-                      )
+                  Column(
+                    children:ele
                   ),
-                  SizedBox(height: 20,),
+                  SizedBox(height:20),
                   Row( 
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                      MaterialButton(
+                        padding: EdgeInsets.all(3),
+                        child: Text('+ msg',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 10
+                            ),),
+                          color: Colors.green[900],
+                          shape: new RoundedRectangleBorder(borderRadius:BorderRadius.circular(30)),
+                          onPressed: (){
+                            if(ele.length==1)
+                            setState(() {
+                              ele.add(messages());
+                              });
+                            }),
+                      ]
+                    ),
+                    SizedBox(height:5,),   
+                    Row( 
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
                        Expanded(child: SizedBox(width:2),),
                        Text('Forward to :',
                         style: TextStyle(

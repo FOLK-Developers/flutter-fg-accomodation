@@ -697,8 +697,8 @@ class requestlist extends StatelessWidget{
                            Navigator.push(context, MaterialPageRoute(builder: (context)=>
                         callocation(berth: document['preferred_berth'],phone:document['Mobile_Number'],
                         message: document['Message'],uname: 
-                        document['Folkname'],from:document['Date'],to:document['Date'],profile: images.elementAt(2).toString(),
-                        center:center )));  
+                        document['Folkname'],from:document['Date'],to:document['Date'],profile: images.elementAt(2),
+                        center:center)));  
                         },
                       ),
                       IconSlideAction(
@@ -709,8 +709,8 @@ class requestlist extends StatelessWidget{
                         Navigator.push(context, MaterialPageRoute(builder: (context)=>
                         forwardreq(berth: document['preferred_berth'],phone:document['Mobile_Number'],
                         message: document['Message'],uname: 
-                        document['Folkname'],from:document['Date'],to:document['Date'],profile: images.elementAt(2).toString(),
-                        center:center )));                         
+                        document['Folkname'],from:document['Date'],to:document['Date'],profile: images.elementAt(2),
+                        center:center)));                         
                          },
                       ),
                     ],);
