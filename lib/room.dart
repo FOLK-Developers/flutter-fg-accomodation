@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
+import 'package:folkguideapp/data.dart';
 
 // ignore: camel_case_types
 class room extends StatefulWidget{
@@ -228,10 +229,9 @@ class roomdata extends State<room>{
                 icon: Icon(Icons.arrow_back_ios),
                 color: Colors.green[900],
                 onPressed: (){
-                  // Navigator.of(context).pop();
-                  // Navigator.push(context, MaterialPageRoute(builder: (context)=>
-                  // callocation({this.berth,this.profile,this.uname,this.message,this.phone,
-                  //  this.from,this.to,this.center,this.bedno});));
+                  Navigator.of(context).pop();
+                  Navigator.push(context, MaterialPageRoute(builder: (context)=>
+                      data(center:centers)));
                 },
               );
             },

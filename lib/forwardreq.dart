@@ -24,7 +24,7 @@ class forward extends State<forwardreq>{
   String selectedcenter='Mumbai',fgmessage;
   TextEditingController fgmessages = TextEditingController();
   List<Container> ele = [];
-
+  String selected='Not selected, Yet';
   Future<void> getcenters() async{
     var db = await Firestore.instance.collection('Centers').getDocuments();
     db.documents.forEach((element){
@@ -91,7 +91,7 @@ class forward extends State<forwardreq>{
         Text(field+":",
           style: TextStyle(
               color: Colors.black,
-              fontSize: 13,
+              fontSize: 14,
               fontWeight: FontWeight.bold
           ),),
         SizedBox(width:1,),
@@ -103,7 +103,7 @@ class forward extends State<forwardreq>{
               Text(value,
                 style: TextStyle(
                     color: Colors.black,
-                    fontSize: 13,
+                    fontSize: 14,
                   ),
                 ),
             ]
@@ -120,7 +120,7 @@ class forward extends State<forwardreq>{
     return  Container(
                               alignment: Alignment.topCenter,
                               child: Padding(
-                                padding: EdgeInsets.symmetric(horizontal:5,vertical:5),
+                                padding: EdgeInsets.symmetric(horizontal:7,vertical:5),
                                 child: Material(
                                 elevation:40,
                                 shape:RoundedRectangleBorder(borderRadius: BorderRadius.circular(35)),
@@ -137,7 +137,7 @@ class forward extends State<forwardreq>{
 backgroundImage: NetworkImage('https://firebasestorage.googleapis.com/v0/b/folkapp'
       '-a0871.appspot.com/o/pexels-sourav-mishra-1149831.jpg?alt=media&token=cf023b19-f06e-4e64-baaa-d7d2398bf0b6'),                                                backgroundColor: Colors.green[900],
                                                 radius: 35,
-                                              ),
+                                               ),
                                             ),
                                       SizedBox(height:8),
                                       namefields('User-name', uname),
@@ -145,6 +145,8 @@ backgroundImage: NetworkImage('https://firebasestorage.googleapis.com/v0/b/folka
                                       namefields('Request','Requested $berth for $from to $to'),
                                       SizedBox(height:5),
                                       namefields('Phone number', phone),
+                                      SizedBox(height:5),
+                                      namefields('Forward to', selected),
                                       SizedBox(height:5),
                                       Row(
                                               mainAxisAlignment: MainAxisAlignment.start,
@@ -170,7 +172,7 @@ backgroundImage: NetworkImage('https://firebasestorage.googleapis.com/v0/b/folka
                                                     Text(message=='No message'?'':message,
                                                       style: TextStyle(
                                                       color: Colors.black,
-                                                      fontSize: 13,
+                                                      fontSize: 14,
                                                   ),
                                                 ),
                                                 ]
@@ -178,6 +180,7 @@ backgroundImage: NetworkImage('https://firebasestorage.googleapis.com/v0/b/folka
                                             ),
                                           ],
                                           ),
+                                        
                                           ],
                                         ),
                                        )
@@ -196,7 +199,7 @@ Container messages(){
       elevation: 40,
       child: Container(
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal:10,vertical:12),
+          padding: EdgeInsets.symmetric(horizontal:8,vertical:8),
           child: Column(
             mainAxisAlignment:MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.stretch,     
@@ -206,7 +209,7 @@ Container messages(){
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   IconButton(
-                    icon: Icon(Icons.close), 
+                    icon: Icon(Icons.close,size: 20,), 
                     onPressed:(){
                        setState(() {
                          ele.removeLast();
@@ -277,80 +280,99 @@ Container messages(){
             ),),
             centerTitle: true,
           ),
-          body: Scrollbar(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical:2,horizontal:2),
-                child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Column(
-                    children:ele
-                  ),
-                  SizedBox(height:20),
-                  Row( 
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                      MaterialButton(
-                        padding: EdgeInsets.all(3),
-                        child: Text('+ msg',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 10
-                            ),),
-                          color: Colors.green[900],
-                          shape: new RoundedRectangleBorder(borderRadius:BorderRadius.circular(30)),
-                          onPressed: (){
-                            if(ele.length==1)
-                            setState(() {
-                              ele.add(messages());
-                              });
-                            }),
-                      ]
+          body: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(child:Scrollbar(
+                child: SingleChildScrollView(
+                  child:Padding(
+                    padding: EdgeInsets.symmetric(vertical:2,horizontal:8),
+                    child: Column(
+                      children:<Widget>[
+                          Column(
+                            children:ele
+                          ),
+                          SizedBox(height:2),
+                          Row( 
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                              MaterialButton(
+                                padding: EdgeInsets.all(3),
+                                child: Text('+ msg',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 13
+                                    ),),
+                                  color: Colors.green[900],
+                                  shape: new RoundedRectangleBorder(borderRadius:BorderRadius.circular(30)),
+                                  onPressed: (){
+                                    if(ele.length==1)
+                                    setState(() {
+                                      ele.add(messages());
+                                      });
+                                    }),
+                              ]
+                            ),
+                            Row( 
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                Expanded(child: SizedBox(width:2),),
+                                Text('Forward to :',
+                                  style: TextStyle(
+                                    fontSize: 16
+                                  ),),
+                                Container( 
+                                          width:100,
+                                          height:30,
+                                          color: Colors.white,
+                                          child: Platform.isIOS ? iOSPicker() : androidDropdown(),
+                                        ),
+                                Expanded(child: SizedBox(width:2),),
+                                ],
+                            ),
+                            ]
+                     ),
                     ),
-                    SizedBox(height:5,),   
-                    Row( 
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                       Expanded(child: SizedBox(width:2),),
-                       Text('Forward to :',
-                        style: TextStyle(
-                          fontSize: 16
-                        ),),
-                       Container( 
-                                width:100,
-                                height:30,
-                                color: Colors.white,
-                                child: Platform.isIOS ? iOSPicker() : androidDropdown(),
-                              ),
-                       Expanded(child: SizedBox(width:2),),
-                       ],
-                   ),
-                   SizedBox(height: 40,),
-                   Container(
-                     width:100,
-                     height: 40,
-                     child: MaterialButton(
-                      padding: EdgeInsets.all(5),
-                      child: Text('Send',
-                        style: TextStyle(
-                          color: Colors.white,
-                        ),),
-                      color: Colors.green[900],
-                      shape: new RoundedRectangleBorder(borderRadius:BorderRadius.circular(15)),
-                      onPressed: (){
-                      },
-                    ),
-                   )
-                 ]
                 ),
-              )
-             ),
-             ),
+              ),
+            ),
+            Container(
+              child:MaterialButton(
+                height: 55,
+                child: Text('Forward',
+                style: TextStyle(
+                  color:Colors.white,
+                  fontSize:15,
+                  ),
+                  ),
+                  color: Colors.green[900],
+                  onPressed: (){},
+                  )
+                  )
+                  ]
+                ),
       ),
     );
   }
   
 }
+
+
+
+
+
+
+// Expanded(
+//                      child: Column(
+//                        children: [
+//                          
+                 
+//                     SizedBox(height:5,),   
+//                     
+
+//                        ]
+//                        ,)
+                  
+//                    ),
+                  

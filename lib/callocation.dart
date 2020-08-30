@@ -42,13 +42,13 @@ class custom_allocation extends State<callocation>{
         Text(field,
           style: TextStyle(
               color: Colors.black,
-              fontSize: 15
+              fontSize: 14
           ),),
         SizedBox(height: 6,),
         Text(n.toString(),
           style: TextStyle(
               color: Colors.green[900],
-              fontSize:15
+              fontSize:14
           ),),
       ],
     );
@@ -66,7 +66,7 @@ class custom_allocation extends State<callocation>{
         Text(field+":",
           style: TextStyle(
               color: Colors.black,
-              fontSize: 13,
+              fontSize: 14,
               fontWeight: FontWeight.bold
           ),),
         SizedBox(width:1,),
@@ -78,7 +78,7 @@ class custom_allocation extends State<callocation>{
               Text(value,
                 style: TextStyle(
                     color: Colors.black,
-                    fontSize: 13,
+                    fontSize: 14,
                   ),
                 ),
             ]
@@ -264,7 +264,7 @@ class custom_allocation extends State<callocation>{
             centerTitle: true,
           ),
           body: Padding(
-                padding: EdgeInsets.symmetric(vertical:2,horizontal:2),
+                padding: EdgeInsets.symmetric(vertical:0,horizontal:0),
                       child:Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
@@ -329,7 +329,7 @@ class custom_allocation extends State<callocation>{
                                                     Text(message=='No message'?'':message,
                                                       style: TextStyle(
                                                       color: Colors.black,
-                                                      fontSize: 13,
+                                                      fontSize: 14,
                                                   ),
                                                 ),
                                                 ]
@@ -369,6 +369,7 @@ class custom_allocation extends State<callocation>{
                           Container(
                             // alignment:Alignment.bottomCenter,
                             child:MaterialButton(
+                              height: 55,
                               child: Text('Next',
                               style: TextStyle(
                                 color:Colors.white,

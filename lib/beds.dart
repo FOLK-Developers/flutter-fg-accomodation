@@ -1,5 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
+import 'package:flutter_time_picker_spinner/flutter_time_picker_spinner.dart';
 import 'package:folkguideapp/date_picker_timeline.dart';
 import 'callocation.dart';
 
@@ -30,7 +32,7 @@ class berths extends State<bed>{
   num highest,smallest,mid;
   List <Row> bed = [];
   String selected = 'No, bed selected',status='No, bed assigned.Yet',btn='allocate';
-  String date = '',date2='';
+  String date = '',date2='',time='',time2='';
    
 
    Row namefields(String field,String value,){
@@ -64,6 +66,78 @@ class berths extends State<bed>{
     );
   } 
 
+
+  Row fromandto(String field1,String field2){
+    return Row(
+      children: [
+        SizedBox(width:12),
+        Expanded(
+          child:Column(
+            children:[
+               Text(field1,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black
+                  ),),
+              DatePicker(
+                  DateTime.now(),
+                  onDateChange: (value){
+                    setState(() {
+                        if(field1=='From'){
+                        date = value.toString();
+                        }
+                        else{
+                        date2 = value.toString();
+                        }
+                        });
+                      },
+                      ),
+                      ]
+                      ) 
+          ),
+          SizedBox(width:10),
+          Column(
+              children: [
+                Text(field2,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black
+                      ),),
+                      TimePickerSpinner(
+                        is24HourMode: true,
+                        normalTextStyle: TextStyle(
+                          fontSize: 14,
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold
+                        ),
+                        highlightedTextStyle: TextStyle(
+                          fontSize: 17,
+                          color: Colors.green[900],
+                          fontWeight: FontWeight.bold
+                          ),
+                        spacing:5,
+                        itemHeight:30,
+                        isForce2Digits: true,
+                        onTimeChange: (value) {
+                          setState(() {
+                          if(field1=='From'){
+                          time = value.toString();
+                          }
+                          else{
+                          time2 = value.toString();
+                          }
+                          });
+                        }
+                        )
+                        ],
+          ),
+          SizedBox(width:15)
+          ]
+      );
+  }
+
  
 
 
@@ -80,7 +154,6 @@ class berths extends State<bed>{
                    crossAxisAlignment: CrossAxisAlignment.start,
                    mainAxisAlignment: MainAxisAlignment.center,
                    children:<Widget>[
-                     SizedBox(height:5),
                      Row(
                        mainAxisAlignment: MainAxisAlignment.end,
                        children:<Widget>[
@@ -90,36 +163,16 @@ class berths extends State<bed>{
                            onPressed: (){
                              Navigator.of(context).pop();
                            }),
+                          
                          SizedBox(
                            width:5
                          )
                          ]
                          ),
-                         Text('from',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black
-                              ),),
-                         DatePicker(
-                               DateTime.now(),
-                               onDateChange: (value){
-                                 date = value.toString();
-                               },
-                              ),
-                         Text('to',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black
-                              ),),
-                         DatePicker(
-                              DateTime.now(),
-                              onDateChange: (value){
-                                date2 = value.toString();
-                              },
-                              ),  
-                         SizedBox(height:5),
+                         fromandto('From','Time'),
+                         SizedBox(height:12),
+                         fromandto('To','Time'),
+                         SizedBox(height:3),
                          namefields('User-name',uname),
                          namefields('Selected-berth','$roomno-$selected'),
                          namefields('Date','from $date to $date2'),

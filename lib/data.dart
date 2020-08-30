@@ -84,13 +84,13 @@ class bedavailable extends State<data>{
         Text(field,
           style: TextStyle(
               color: Colors.black,
-              fontSize: 15
+              fontSize: 14
           ),),
         SizedBox(height: 6,),
         Text(n.toString(),
           style: TextStyle(
               color: Colors.green[900],
-              fontSize:15
+              fontSize:14
           ),),
       ],
     );
@@ -102,13 +102,13 @@ class bedavailable extends State<data>{
         Text(field+":",
           style: TextStyle(
               color: Colors.black,
-              fontSize: 15
+              fontSize: 14
           ),),
         SizedBox(height:3,),
         Text(value,
           style: TextStyle(
               color: Colors.green[900],
-              fontSize:15
+              fontSize:14
           ),),
       ],
     );
@@ -544,7 +544,7 @@ class bedavailable extends State<data>{
          body: Scrollbar(
            child:SingleChildScrollView(
              child:Padding(
-               padding: EdgeInsets.all(18),
+               padding: EdgeInsets.all(20),
                child: Column(
                  children: <Widget>[
                    Container(
@@ -561,7 +561,7 @@ class bedavailable extends State<data>{
                    ),
                    Container(
                      padding: EdgeInsets.all(12),
-                     height: 290,
+                     height: 235,
                      alignment: Alignment.topCenter,
                      child: Material(
                        elevation: 40,
@@ -571,14 +571,14 @@ class bedavailable extends State<data>{
                            Text('Available bed details',
                              style: TextStyle(
                                  color: Colors.black,
-                                 fontSize: 16,
+                                 fontSize: 15,
                                fontWeight: FontWeight.bold
                              ),),
                            SizedBox(height: 5,),
                            Text('total available beds :$count',
                                style:TextStyle(
                                    color:Colors.black,
-                                   fontSize: 16
+                                   fontSize: 15
                                )),
                            SizedBox(height: 5,),
                            Row(
@@ -597,14 +597,14 @@ class bedavailable extends State<data>{
                            Text('Bed requests data',
                                style:TextStyle(
                                    color:Colors.black,
-                                   fontSize: 17,
+                                   fontSize: 15,
                                    fontWeight: FontWeight.bold
                                )),
                            SizedBox(height: 5,),
                            Text('total Bed requests :$totalr',
                                style:TextStyle(
                                    color:Colors.black,
-                                   fontSize: 16
+                                   fontSize: 14
                                )),
                            SizedBox(height: 5,),
                            Row(
@@ -621,7 +621,7 @@ class bedavailable extends State<data>{
                    ),
                    SizedBox(height: 5,),
                    Container(
-                         padding: EdgeInsets.symmetric(horizontal: 17),
+                         padding: EdgeInsets.symmetric(horizontal: 14),
                          child: Column(
                              crossAxisAlignment: CrossAxisAlignment.stretch,
                              children:roomslist
