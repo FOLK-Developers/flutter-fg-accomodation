@@ -2,29 +2,36 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:folkguideapp/beds.dart';
 import 'package:folkguideapp/mainpage.dart';
+import 'package:intl/intl.dart';
 
 // ignore: camel_case_types
 class forwardreq extends StatefulWidget{
   forwardreq({this.berth,this.profile,this.uname,this.message,this.phone,
-  this.from,this.to,this.center});
-  final String berth,profile,uname,message,phone,center,from,to;
+  this.from,this.to,this.center,this.doc,this.reqid});
+  final String berth,profile,uname,message,phone,center,from,to,doc,reqid;
      @override
      forward createState()=>forward( berth: berth,
-     uname: uname,message: message,phone: phone,center: center,from:from,to:to);
+     uname: uname,message: message,phone: phone,center: center,from:from,to:to,doc: doc,reqid: reqid);
     
 }
 
 // ignore: camel_case_types
 class forward extends State<forwardreq>{
  forward({this.berth,this.profile,this.uname,this.message,this.phone,
-  this.from,this.to,this.center});
-  final String berth,uname,message,phone,center,from,to,profile;
+  this.from,this.to,this.center,this.doc,this.reqid});
+  final String berth,uname,message,phone,center,from,to,profile,doc,reqid;
+  var db  = Firestore.instance.collection('Centers');
   List<String> centers = [];
-  String selectedcenter='Mumbai',fgmessage;
+  String selectedcenter='Mumbai',fgmessage,docid,fwdmsg;
   TextEditingController fgmessages = TextEditingController();
   List<Container> ele = [];
   String selected='Not selected, Yet';
+  static DateTime now = DateTime.now();
+  static var  formatter = DateFormat('yyyy-MM-dd');
+  static var today = formatter.format(now);
+
   Future<void> getcenters() async{
     var db = await Firestore.instance.collection('Centers').getDocuments();
     db.documents.forEach((element){
@@ -32,6 +39,48 @@ class forward extends State<forwardreq>{
         centers.add(element.data['centre']);
       });
     });
+  }
+
+    Future getdoc() async{
+      var bed = await db.where('centre',isEqualTo:centers).getDocuments();
+      bed.documents.forEach((checkforbed) {
+        setState(() {
+          docid = checkforbed.documentID;
+        });
+        }); 
+    }
+
+
+    Future<bool> question(BuildContext context,String bedno,String summary) {
+    return showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return new AlertDialog(
+            title: Text(bedno
+              ,textAlign: TextAlign.left,),
+            content: Text(summary),
+            contentPadding: EdgeInsets.all(10.0),
+            actions: <Widget>[
+              FlatButton(
+                child: Text("Ok",
+                  style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold
+                  ),),
+                onPressed: () async{
+                    Navigator.of(context).pop();
+                    Navigator.push(context, MaterialPageRoute(builder: (context)=>
+                      mainpage(center: center,)));
+
+               
+                },
+                padding: EdgeInsets.all(9),
+              )
+            ],
+          );
+        });
   }
 
 
@@ -49,6 +98,7 @@ class forward extends State<forwardreq>{
       items: dropdownItems,
       onChanged: (value) {
         setState(() {
+          fwdmsg =fwdmsg=='No message'?'[Fwd from:$center]':fwdmsg+'[Fwd from:$center]';
           selectedcenter = value;
         });
       },
@@ -65,6 +115,7 @@ class forward extends State<forwardreq>{
       itemExtent: 32.0,
       onSelectedItemChanged: (selectedIndex) {
         setState(() {
+          fwdmsg =fwdmsg=='No message'?'[Fwd from:$center]':fwdmsg+'[Fwd from:$center]';
           selectedcenter = centers[selectedIndex];
         });
       },
@@ -73,11 +124,45 @@ class forward extends State<forwardreq>{
   }
 
 
+  Future Forward() async{
+    var db = Firestore.instance.collection('Profile').document(phone).collection('history').document(reqid);
+    var cRecord =  Firestore.instance.collection(center).document(today).collection('allrequest').document(doc);
+    var forward =  Firestore.instance.collection(selectedcenter).document(today).collection('allrequest');
+
+    db.updateData({
+      'status':'Forward to $selectedcenter',
+      }).then((value){
+          cRecord.updateData({
+              'status':'Forward to $selectedcenter',
+              }).then((value) {
+                forward.add( {
+                    "Folkname": uname,
+                    "Mobile_Number": phone,
+                    "preferred_berth": berth,
+                    "Message":fwdmsg,
+                    "status":"Waiting for approval",
+                    "allocated":"null",
+                    "type":0,
+                    "reqid":reqid,
+                    "rtime":from.substring(12,16),
+                    'from':from.substring(0,16),
+                    'to': to.substring(0,16)
+                  });    
+                  question(context,'Fwd successfully','Request was successfully forwarded to $selectedcenter center.');                                  
+                });
+                });
+
+  }
+
+
 
   @override
   void initState() {
     super.initState();
     getcenters();
+    setState(() {
+      fwdmsg = message;
+    });
     ele.add(Request());
     }
 
@@ -135,7 +220,8 @@ class forward extends State<forwardreq>{
                                               alignment: Alignment.center,
                                               child:CircleAvatar(
 backgroundImage: NetworkImage('https://firebasestorage.googleapis.com/v0/b/folkapp'
-      '-a0871.appspot.com/o/pexels-sourav-mishra-1149831.jpg?alt=media&token=cf023b19-f06e-4e64-baaa-d7d2398bf0b6'),                                                backgroundColor: Colors.green[900],
+      '-a0871.appspot.com/o/pexels-sourav-mishra-1149831.jpg?alt=media&token=cf023b19-f06e-4e64-baaa-d7d2398bf0b6'),                                               
+       backgroundColor: Colors.green[900],
                                                 radius: 35,
                                                ),
                                             ),
@@ -221,7 +307,9 @@ Container messages(){
                       maxLines: 3,
                       controller : fgmessages,
                       onChanged:(value){
-                       fgmessage = value;
+                        setState(() {
+                         fwdmsg =fwdmsg=='No message'?'[Fwd from:$center,msg:$value]':fwdmsg+'[Fwd from:$center,msg:$value]';
+                        });
                       },
                       decoration: InputDecoration(
                         contentPadding: EdgeInsets.all(7),
@@ -347,7 +435,9 @@ Container messages(){
                   ),
                   ),
                   color: Colors.green[900],
-                  onPressed: (){},
+                  onPressed: (){
+                    Forward();
+                  },
                   )
                   )
                   ]

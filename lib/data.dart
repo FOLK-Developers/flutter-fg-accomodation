@@ -20,7 +20,7 @@ class bedavailable extends State<data>{
   bedavailable({this.center,this.type});
   final String center;
   final bool type;
-  num lb=0,mb=0,ub=0,rlb=0,rmb=0,rub=0,count=0,totalr=0,prob=0,allocs=0,alb=0,amb=0,aub=0;
+  num lb=0,mb=0,ub=0,rlb=0,rmb=0,rub=0,count=0,totalr=0,prob=0,allocs=0,alb=0,amb=0,aub=0,i=0;
   String location='',admin='',rname='',doc='';
   num ub1=0,lb1=0,mb1=0,rcount=0,index=0;
   String note="",note1="",tallocs="";
@@ -37,8 +37,8 @@ class bedavailable extends State<data>{
 
 
   // ignore: missing_return
-  Future<num> reqcount(String s,String status) async {
-    var db = Firestore.instance.collection('requests').document(today).collection('allrequests');
+  Future reqcount(String s,String status) async {
+    var db = Firestore.instance.collection(center).document(today).collection('allrequest');
     var docu= await db.where("preferred_berth",isEqualTo:s).where('status',isEqualTo: "Waiting for approval").getDocuments();
     docu.documents.forEach((element) {
       setState(() {
@@ -206,11 +206,12 @@ class bedavailable extends State<data>{
         });
   }
 
+   
 
 
 
 
-  Container rooms(String rn,num l,num m,num u,bool flag){
+  Container rooms(String rn,num l,num m,num u,bool flag,num i){
     return Container(
       child: Column(
         crossAxisAlignment:CrossAxisAlignment.stretch,
@@ -272,7 +273,9 @@ class bedavailable extends State<data>{
                               setState(() {
                             question(context,'Remove, $rn','Do you really want to remove ,$rn.',rn).
                             then((value) {
-                                addroom();
+                              setState(() {
+                                roomslist.removeAt(i);
+                                });
                               });
                             });
                             }
@@ -332,7 +335,10 @@ class bedavailable extends State<data>{
               temp2 = temp2 + roomN.data['middleberth'];
               temp3 = temp3 + roomN.data['upperberth'];
               roomslist.add(rooms(roomN.documentID, roomN.data['lowerberth'],
-                  roomN.data['middleberth'], roomN.data['upperberth'],type));
+                  roomN.data['middleberth'], roomN.data['upperberth'],type,i));
+                  setState(() {
+                    i++;
+                    });
             });
     setState((){
       // admin =  db.data['admin'];
@@ -399,59 +405,60 @@ class bedavailable extends State<data>{
         context: context,
         barrierDismissible: false,
         builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text(text),
-            content:Scrollbar(
-              child: SingleChildScrollView(
-                child:Container(
-                  height: 300,
-                  child:Container(
-                  height: 300,
-                  child: Padding(
-                    padding: EdgeInsets.all(30) ,
-                    child:Column(
-                      children: <Widget>[
-                        Column(
-                          children: <Widget>[
-                            Text('Room no:',
-                              style: TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 16
-                              ),),
-                            SizedBox(width: 3,),
-                            Container(
-                              width:300,
-                              child:  TextField(
-                                cursorColor: Colors.green[900],
-                                controller: roomname,
-                                onChanged: (value){
-                                  setState(() {
-                                    rname = value;
-                                    });
-                                    },
-                                    decoration:InputDecoration(
-                                  enabledBorder: UnderlineInputBorder(
-                                      borderSide: BorderSide(color: Colors.green[900])
+          var edgeInsets = EdgeInsets.symmetric(horizontal:5,vertical:0);
+                    return AlertDialog(
+                      title: Text(text),
+                      content:Scrollbar(
+                        child: SingleChildScrollView(
+                          child:Container(
+                            height: 300,
+                            child:Container(
+                            height: 300,
+                            child: Padding(
+                              padding: EdgeInsets.all(30) ,
+                              child:Column(
+                                children: <Widget>[
+                                  Column(
+                                    children: <Widget>[
+                                      Text('Room no:',
+                                        style: TextStyle(
+                                            color: Colors.black,
+                                            fontSize: 16
+                                        ),),
+                                      SizedBox(width: 3,),
+                                      Container(
+                                        width:300,
+                                        child:  TextField(
+                                          cursorColor: Colors.green[900],
+                                          controller: roomname,
+                                          onChanged: (value){
+                                            setState(() {
+                                              rname = value;
+                                              });
+                                              },
+                                              decoration:InputDecoration(
+                                            enabledBorder: UnderlineInputBorder(
+                                                borderSide: BorderSide(color: Colors.green[900])
+                                            ),
+                                            focusedBorder: UnderlineInputBorder(
+                                                borderSide: BorderSide(color: Colors.green[900])
+                                            ),
+                                          ),
+                                        ),
+                                      )
+                                    ],
                                   ),
-                                  focusedBorder: UnderlineInputBorder(
-                                      borderSide: BorderSide(color: Colors.green[900])
-                                  ),
-                                ),
+                                  updatefields("No. of lower bed's  :",1),
+                                  updatefields("No. of middle bed's:",2),
+                                  updatefields("No. of upper bed's  :",3),
+                                  ],
                               ),
                             )
-                          ],
-                        ),
-                        updatefields("No. of lower bed's  :",1),
-                        updatefields("No. of middle bed's:",2),
-                        updatefields("No. of upper bed's  :",3),
-                        ],
-                    ),
-                  )
-                 ),
-                ),
-                ),
-                ),
-            contentPadding: EdgeInsets.all(5.0),
+                           ),
+                          ),
+                          ),
+                          ),
+                      contentPadding: edgeInsets,
             actions: <Widget>[
               new MaterialButton(
                 child: Text(button),
@@ -484,7 +491,7 @@ class bedavailable extends State<data>{
                     setState(() {
                        updates(rname,lb1, mb1, ub1);
                          roomslist.add(rooms(roomname.text,num.parse(lowerberth.text),
-                      num.parse(middleberth.text),num.parse(upperberth.text),type));
+                      num.parse(middleberth.text),num.parse(upperberth.text),type,i));
                       lowerberth.clear();
                       upperberth.clear();
                       middleberth.clear();

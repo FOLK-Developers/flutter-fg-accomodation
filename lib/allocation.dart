@@ -602,8 +602,8 @@ class requestlist extends StatelessWidget{
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
-        stream: Firestore.instance.collection('requests').document(today).
-        collection('allrequests').where('status',isEqualTo: "Waiting for approval").
+        stream: Firestore.instance.collection(center).document(today).
+        collection('allrequest').where('status',isEqualTo: "Waiting for approval").
         snapshots(),
         builder: (BuildContext context,
             AsyncSnapshot<QuerySnapshot> snapshot) {
@@ -651,12 +651,11 @@ class requestlist extends StatelessWidget{
                                             fontWeight: FontWeight.bold
                                         ),),
                                       SizedBox(height: 7.0,),
-                                      Text("Requested "+
-                                          document['preferred_berth'].toString().toLowerCase()
-                                          +" for "+document['Date'],
+                                      Text(document['preferred_berth'].toString().toLowerCase()
+                                          +" for "+document['from'].substring(0,16)+' - '+document['to'].substring(0,16),
                                         style: TextStyle(
                                             color: Colors.black,
-                                            fontSize: 12
+                                            fontSize: 11
                                         ),),
                                       Text(document['Message']=='No message'? "" :"Message :" + document['Message'],
                                         style: TextStyle(
@@ -677,13 +676,13 @@ class requestlist extends StatelessWidget{
                       color: Colors.red,
                       icon: Icons.delete,
                       onTap: () async{
-                        await Firestore.instance.collection('users').document(document['Mobile_Number']).
+                        await Firestore.instance.collection('Profile').document(document['Mobile_Number']).
                         collection('history').document(document['reqid']).updateData({
                           "status":"Request was declined",
                           "allocated":"No bed was allocated"
                         }).then((value) async{
-                          await Firestore.instance.collection('requests').document(today).
-                          collection('allrequests').document(document.documentID).delete();
+                          await Firestore.instance.collection(center).document(today).
+                          collection('allrequest').document(document.documentID).delete();
                         });
                         },
                     ),
@@ -697,8 +696,8 @@ class requestlist extends StatelessWidget{
                            Navigator.push(context, MaterialPageRoute(builder: (context)=>
                         callocation(berth: document['preferred_berth'],phone:document['Mobile_Number'],
                         message: document['Message'],uname: 
-                        document['Folkname'],from:document['Date'],to:document['Date'],profile: images.elementAt(2),
-                        center:center)));  
+                        document['Folkname'],from:document['from'].substring(0,16),to:document['to'].substring(0,16),profile: images.elementAt(2),
+                        center:center,doc:document.documentID,reqid:document['reqid'],)));  
                         },
                       ),
                       IconSlideAction(
@@ -709,8 +708,8 @@ class requestlist extends StatelessWidget{
                         Navigator.push(context, MaterialPageRoute(builder: (context)=>
                         forwardreq(berth: document['preferred_berth'],phone:document['Mobile_Number'],
                         message: document['Message'],uname: 
-                        document['Folkname'],from:document['Date'],to:document['Date'],profile: images.elementAt(2),
-                        center:center)));                         
+                        document['Folkname'],from:document['from'].substring(0,16),to:document['to'].substring(0,16),profile: images.elementAt(2),
+                        center:center,doc:document.documentID,reqid:document['reqid'],)));                         
                          },
                       ),
                     ],);

@@ -1,38 +1,50 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_time_picker_spinner/flutter_time_picker_spinner.dart';
+import 'package:folkguideapp/allocation.dart';
 import 'package:folkguideapp/date_picker_timeline.dart';
+import 'package:folkguideapp/room.dart';
+import 'package:intl/intl.dart';
 import 'callocation.dart';
+import 'mainpage.dart';
 
 // ignore: camel_case_types
 class bed extends StatefulWidget{
   bed({this.berth,this.profile,this.uname,this.message,this.phone,
-  this.from,this.to,this.roomno,this.centers,this.nlb,this.nmb,this.nub});
+  this.from,this.to,this.roomno,this.centers,this.nlb,this.nmb,this.nub,this.docs,this.reqid});
   final String roomno;
   final String centers;
   final num nlb,nmb,nub;
-  final String berth,profile,uname,message,phone,from,to;
+  final String berth,profile,uname,message,phone,from,to,docs,reqid;
   berths createState()=>berths(berth: berth,
      uname: uname,message: message,phone: phone,from:from,to:to,
-     roomno: roomno,centers: centers,nlb: nlb,nmb: nmb,nub: nub);
+     roomno: roomno,centers: centers,nlb: nlb,nmb: nmb,nub: nub,docs: docs,reqid: reqid);
 }
 
 // ignore: camel_case_types
 class berths extends State<bed>{
   berths({this.berth,this.profile,this.uname,this.message,this.phone,
-  this.from,this.to,this.roomno,this.centers,this.nlb,this.nmb,this.nub});
+  this.from,this.to,this.roomno,this.centers,this.nlb,this.nmb,this.nub,this.docs,this.reqid});
   final String roomno;
   final String centers;
   final num nlb,nmb,nub;
-  final String berth,profile,uname,message,phone,from,to;
+  final String berth,profile,uname,message,phone,from,to,reqid,docs;
   num c=0;
   String a1,a2,a3;
   // ignore: non_constant_identifier_names
   num highest,smallest,mid;
   List <Row> bed = [];
   String selected = 'No, bed selected',status='No, bed assigned.Yet',btn='allocate';
-  String date = '',date2='',time='',time2='';
+  String date = '',date2='',time='',time2='',docid;
+  var db  = Firestore.instance.collection('Centers');
+  roomdata room = roomdata();
+  static DateTime now = DateTime.now();
+  static var  formatter = DateFormat('yyyy-MM-dd');
+  static var today = formatter.format(now);
+  bool active = false;
+
    
 
    Row namefields(String field,String value,){
@@ -67,6 +79,9 @@ class berths extends State<bed>{
   } 
 
 
+  
+
+
   Row fromandto(String field1,String field2){
     return Row(
       children: [
@@ -83,14 +98,16 @@ class berths extends State<bed>{
               DatePicker(
                   DateTime.now(),
                   onDateChange: (value){
-                    setState(() {
                         if(field1=='From'){
-                        date = value.toString();
+                          setState(() {
+                            date = value.toString();
+                            });
                         }
                         else{
-                        date2 = value.toString();
+                          setState(() {
+                            date2 = value.toString();
+                            });
                         }
-                        });
                       },
                       ),
                       ]
@@ -121,31 +138,90 @@ class berths extends State<bed>{
                         itemHeight:30,
                         isForce2Digits: true,
                         onTimeChange: (value) {
-                          setState(() {
                           if(field1=='From'){
-                          time = value.toString();
+                            setState(() {
+                              time = value.toString();
+                              });
                           }
                           else{
-                          time2 = value.toString();
+                            setState(() {
+                              time2 = value.toString();
+                              });
                           }
-                          });
                         }
                         )
                         ],
           ),
-          SizedBox(width:15)
           ]
       );
   }
 
- 
+
+  Future<bool> question(BuildContext context,String bedno,String summary) {
+    return showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return new AlertDialog(
+            title: Text(bedno
+              ,textAlign: TextAlign.left,),
+            content: Text(summary),
+            contentPadding: EdgeInsets.all(10.0),
+            actions: <Widget>[
+              FlatButton(
+                child: Text("Ok",
+                  style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold
+                  ),),
+                onPressed: () async{
+                    Navigator.of(context).pop();
+                    Navigator.push(context, MaterialPageRoute(builder: (context)=>
+                      mainpage(center: centers,)));
+
+               
+                },
+                padding: EdgeInsets.all(9),
+              )
+            ],
+          );
+        });
+  }
+
+  Future allocating(String bedno,String from,String to) async{
+    var allocating = Firestore.instance.collection(centers).document(today).collection('allrequest').document(docs);
+    var hUpdate =  Firestore.instance.collection('Profile').document(phone).collection('history').document(reqid);
+    allocating.updateData({
+      'allocated':roomno+','+bedno,
+      'status':'Ready to occupy',
+      'from':from,
+      'to':to
+    }).then((value){
+      hUpdate.updateData({
+        'allocated':roomno+','+bedno,
+        'status':'Ready to occupy',
+        'from':from,
+        'to':to
+        });
+      db.document(docid).collection('Activeallocs').add({
+        'bedno':bedno,
+        'room':roomno,
+        'allocated_to':phone,
+        'reqid':reqid
+        });
+        }).then((value) {
+          question(context,bedno,'bed no.'+bedno+' from '+roomno+' was successfully allocated to $uname');
+          });
+
+  }
 
 
 
    
 
 
-  Scrollbar dateselect(){
+  Scrollbar dateselect(String bedno){
     return Scrollbar(
        child: SingleChildScrollView(
          child:Padding(
@@ -173,10 +249,9 @@ class berths extends State<bed>{
                          SizedBox(height:12),
                          fromandto('To','Time'),
                          SizedBox(height:3),
-                         namefields('User-name',uname),
+                         namefields('name',uname),
                          namefields('Selected-berth','$roomno-$selected'),
-                         namefields('Date','from $date to $date2'),
-                         namefields('Status',status),
+                        //  namefields('Date','from:'+date.substring(0,10)+time.substring(10,16)+'-'+date2.substring(0,10)+time2.substring(10,16)),
                          Row(
                            mainAxisAlignment: MainAxisAlignment.center,
                            crossAxisAlignment: CrossAxisAlignment.center,
@@ -189,7 +264,13 @@ class berths extends State<bed>{
                                 ),
                                 ),
                               color: Colors.green[900],
-                              onPressed: (){},
+                              onPressed: (){
+                               if(date!='null' && date2!='null'){
+                                
+                                 allocating(bedno,date.substring(0,10)+time.substring(10,16),date2.substring(0,10)+time2.substring(10,16));
+                               }
+
+                              },
                               )
                               
 
@@ -201,6 +282,20 @@ class berths extends State<bed>{
        )
        );
   }
+
+  Future<bool> checkforbed(String berth) async{
+    bool temp = false;
+    var checkforbed = await db.document(docid).collection('Activeallocs').where('room',isEqualTo:roomno).where('bedno',isEqualTo:berth).
+    getDocuments();
+    checkforbed.documents.forEach((checking) {
+      if(checking.data['bedno']==berth)
+      setState(() {
+        temp = true;
+          });
+      });
+
+      return temp;
+      }
   
 
 
@@ -210,15 +305,21 @@ class berths extends State<bed>{
   MaterialButton beds(Color col,String bedno){
     return MaterialButton(
       padding: EdgeInsets.symmetric(horizontal: 3,vertical: 1),
-      onPressed: (){
-        //  setState(() {
-           selected = bedno;
+      onPressed: () async{
+           
+
+        if(await checkforbed(bedno)){
+           room.question(context, bedno,"Oops,Bed selected isn't Vacant.");
+           }
+        else{
+          selected = bedno;
            showModalBottomSheet(
              context: context, 
              builder: (BuildContext context){
-               return dateselect();
+               return dateselect(bedno);
              });
-             },
+          }
+        },
       child: Container(
         height: 100,
         width: 60,
@@ -355,6 +456,15 @@ class berths extends State<bed>{
     }
   }
 
+    Future getdoc() async{
+      var bed = await db.where('centre',isEqualTo:centers).getDocuments();
+      bed.documents.forEach((checkforbed) {
+        setState(() {
+          docid = checkforbed.documentID;
+        });
+        }); 
+    }
+
 
     @override
   void initState() {
@@ -363,6 +473,8 @@ class berths extends State<bed>{
     smallests(nlb,nmb,nub);
     middles(nlb,nmb,nub);
     merge(nlb,nmb,nub);
+    getdoc();
+    
     }
 
 
@@ -382,7 +494,7 @@ class berths extends State<bed>{
                   Navigator.of(context).pop();
                   Navigator.push(context, MaterialPageRoute(builder: (context)=>callocation(berth:berth,profile:profile,
                   uname:uname,message:message,phone:phone,
-                   from:from,to:to,center:centers,
+                   from:from,to:to,center:centers,doc: docs,reqid: reqid,
                   )));
                 },
               );
