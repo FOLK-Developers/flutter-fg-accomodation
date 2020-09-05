@@ -21,7 +21,7 @@ class bedavailable extends State<data>{
   final String center;
   final bool type;
   num lb=0,mb=0,ub=0,rlb=0,rmb=0,rub=0,count=0,totalr=0,prob=0,allocs=0,alb=0,amb=0,aub=0,i=0;
-  String location='',admin='',rname='',doc='';
+  String location='',admin='',rname='',doc='',docid='';
   num ub1=0,lb1=0,mb1=0,rcount=0,index=0;
   String note="",note1="",tallocs="";
   static DateTime now = DateTime.now();
@@ -36,43 +36,6 @@ class bedavailable extends State<data>{
 
 
 
-  // ignore: missing_return
-  Future reqcount(String s,String status) async {
-    var db = Firestore.instance.collection(center).document(today).collection('allrequest');
-    var docu= await db.where("preferred_berth",isEqualTo:s).where('status',isEqualTo: "Waiting for approval").getDocuments();
-    docu.documents.forEach((element) {
-      setState(() {
-        if (status=="Waiting for approval") {
-          if (s == "LOWER_BERTH") {
-            rlb++;
-            totalr++;
-          }
-          else if (s == "MIDDLE_BERTH") {
-            rmb++;
-            totalr++;
-          }
-          else {
-            rub++;
-            totalr++;
-          }
-        }
-        else if(status=="Bed allocated"){
-          if (s == "LOWER_BERTH") {
-            alb++;
-            allocs++;
-          }
-          else if (s == "MIDDLE_BERTH") {
-            amb++;
-            allocs++;
-          }
-          else {
-            aub++;
-            allocs++;
-          }
-        }
-      });
-    });
-  }
 
 
 
@@ -113,6 +76,18 @@ class bedavailable extends State<data>{
       ],
     );
   }
+
+
+  
+    Future getdoc() async{
+      var bed = await Firestore.instance.collection('Centers').where('centre',isEqualTo:center).getDocuments();
+      bed.documents.forEach((checkforbed) {
+        setState(() {
+          docid = checkforbed.documentID;
+        });
+        }); 
+    }
+
 
 
 
@@ -206,6 +181,29 @@ class bedavailable extends State<data>{
         });
   }
 
+
+  Future reqcount(String berth) async {
+    var db = Firestore.instance.collection(center).document(today).collection('allrequest');
+    var docu = await db.where("preferred_berth",isEqualTo:berth).where('status',isEqualTo:'Waiting for approval').getDocuments();
+       if(docu.documents.isNotEmpty) {
+         docu.documents.forEach((element) {
+           setState(() {
+             if (berth == "LOWER_BERTH") {
+               rlb++;
+               totalr++;
+             }
+             else if (berth == "MIDDLE_BERTH") {
+               rmb++;
+               totalr++;
+              }
+             else {
+               rub++;
+               totalr++;
+             }
+           });
+         });
+       }
+       }
    
 
 
@@ -225,7 +223,7 @@ class bedavailable extends State<data>{
             child: FlatButton(
               onPressed: (){
                   Navigator.push(context,MaterialPageRoute(builder: (context) =>
-                      room(roomno: rn,centers: center,nlb: l,nmb: m,nub: u),));
+                      room(roomno: rn,centers: center,nlb: l,nmb: m,nub: u,doc:docid,),));
                 },
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal:1,vertical:5),
@@ -318,6 +316,9 @@ class bedavailable extends State<data>{
     num temp1=0,temp2=0,temp3=0;
     String flag='';
     roomslist.clear();
+    await reqcount('LOWER_BERTH');
+    await reqcount('MIIDLE_BERTH');
+    await reqcount('UPPER_BERTH');
     var collectionRef = await Firestore.instance.collection('Centers').where('centre',isEqualTo:center).getDocuments();
       collectionRef.documents.forEach((element) {
         flag = element.documentID;
@@ -514,8 +515,11 @@ class bedavailable extends State<data>{
   @override
   void initState(){
     super.initState();
-   
+    getdoc();
     addroom();
+ 
+
+
   }
 
 

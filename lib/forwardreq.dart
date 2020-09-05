@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:folkguideapp/beds.dart';
 import 'package:folkguideapp/mainpage.dart';
 import 'package:intl/intl.dart';
 
@@ -124,6 +123,7 @@ class forward extends State<forwardreq>{
   }
 
 
+  // ignore: non_constant_identifier_names
   Future Forward() async{
     var db = Firestore.instance.collection('Profile').document(phone).collection('history').document(reqid);
     var cRecord =  Firestore.instance.collection(center).document(today).collection('allrequest').document(doc);
@@ -307,9 +307,16 @@ Container messages(){
                       maxLines: 3,
                       controller : fgmessages,
                       onChanged:(value){
+                        if(fwdmsg=='No message'){
+                          setState(() {
+                            fwdmsg = '[Fwd from:$center,msg:$value]';
+                          });
+                        }
+                        else{
                         setState(() {
-                         fwdmsg =fwdmsg=='No message'?'[Fwd from:$center,msg:$value]':fwdmsg+'[Fwd from:$center,msg:$value]';
+                         fwdmsg =fwdmsg+'[Fwd from:$center,msg:$value]';
                         });
+                        }
                       },
                       decoration: InputDecoration(
                         contentPadding: EdgeInsets.all(7),

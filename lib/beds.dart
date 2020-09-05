@@ -1,9 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter_time_picker_spinner/flutter_time_picker_spinner.dart';
-import 'package:folkguideapp/allocation.dart';
 import 'package:folkguideapp/date_picker_timeline.dart';
 import 'package:folkguideapp/room.dart';
 import 'package:intl/intl.dart';
@@ -189,7 +187,7 @@ class berths extends State<bed>{
         });
   }
 
-  Future allocating(String bedno,String from,String to) async{
+  Future allocating(String bedno,String from,String to,num type) async{
     var allocating = Firestore.instance.collection(centers).document(today).collection('allrequest').document(docs);
     var hUpdate =  Firestore.instance.collection('Profile').document(phone).collection('history').document(reqid);
     allocating.updateData({
@@ -208,7 +206,8 @@ class berths extends State<bed>{
         'bedno':bedno,
         'room':roomno,
         'allocated_to':phone,
-        'reqid':reqid
+        'reqid':reqid,
+        'type':type
         });
         }).then((value) {
           question(context,bedno,'bed no.'+bedno+' from '+roomno+' was successfully allocated to $uname');
@@ -221,7 +220,7 @@ class berths extends State<bed>{
    
 
 
-  Scrollbar dateselect(String bedno){
+  Scrollbar dateselect(String bedno,num type){
     return Scrollbar(
        child: SingleChildScrollView(
          child:Padding(
@@ -267,7 +266,7 @@ class berths extends State<bed>{
                               onPressed: (){
                                if(date!='null' && date2!='null'){
                                 
-                                 allocating(bedno,date.substring(0,10)+time.substring(10,16),date2.substring(0,10)+time2.substring(10,16));
+                                 allocating(bedno,date.substring(0,10)+time.substring(10,16),date2.substring(0,10)+time2.substring(10,16),type);
                                }
 
                               },
@@ -302,7 +301,7 @@ class berths extends State<bed>{
 
 
   // ignore: missing_return
-  MaterialButton beds(Color col,String bedno){
+  MaterialButton beds(Color col,String bedno,num type){
     return MaterialButton(
       padding: EdgeInsets.symmetric(horizontal: 3,vertical: 1),
       onPressed: () async{
@@ -316,7 +315,7 @@ class berths extends State<bed>{
            showModalBottomSheet(
              context: context, 
              builder: (BuildContext context){
-               return dateselect(bedno);
+               return dateselect(bedno,type);
              });
           }
         },
@@ -412,13 +411,13 @@ class berths extends State<bed>{
     return Row(
         children: [
           Expanded(
-              child: lb==0?MaterialButton(onPressed: (){},):beds(Colors.green[900],'lb-$lb')
+              child: lb==0?MaterialButton(onPressed: (){},):beds(Colors.green[900],'lb-$lb',1)
           ),
           Expanded(
-              child: mb==0?MaterialButton(onPressed: (){}):beds(Colors.green[900],'mb-$mb')
+              child: mb==0?MaterialButton(onPressed: (){}):beds(Colors.green[900],'mb-$mb',2)
           ),
           Expanded(
-              child: ub==0?MaterialButton(onPressed: (){}):beds(Colors.green[900],'ub-$ub')
+              child: ub==0?MaterialButton(onPressed: (){}):beds(Colors.green[900],'ub-$ub',3)
           ),
         ]
     );

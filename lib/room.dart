@@ -5,23 +5,22 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
-import 'package:folkguideapp/allocation.dart';
 import 'package:folkguideapp/data.dart';
 
 // ignore: camel_case_types
 class room extends StatefulWidget{
-  room({this.roomno,this.centers,this.nlb,this.nmb,this.nub});
+  room({this.roomno,this.centers,this.nlb,this.nmb,this.nub,this.doc});
   final String roomno;
-  final String centers;
+  final String centers,doc;
   final num nlb,nmb,nub;
-  roomdata createState()=>roomdata(rn: roomno,centers: centers,nlb: nlb,nmb: nmb,nub: nub);
+  roomdata createState()=>roomdata(rn: roomno,centers: centers,nlb: nlb,nmb: nmb,nub: nub,doc: doc);
 }
 
 // ignore: camel_case_types
 class roomdata extends State<room>{
-  roomdata({this.rn,this.centers,this.nlb,this.nmb,this.nub});
+  roomdata({this.rn,this.centers,this.nlb,this.nmb,this.nub,this.doc});
   final String rn;
-  final String centers;
+  final String centers,doc;
   num nlb,nmb,nub;
   num c=0;
   String a1,a2,a3,docid,name='',phone='',from='',to='';
@@ -64,14 +63,21 @@ class roomdata extends State<room>{
         });
   }
 
-   Future getdoc() async{
-      var bed = await db.where('centre',isEqualTo:centers).getDocuments();
-      bed.documents.forEach((checkforbed) {
-        setState(() {
-          docid = checkforbed.documentID;
-        });
-        }); 
-    }
+   Future getdoc(berth) async{
+     
+     var details = await Firestore.instance.collection('Centers').document(doc).collection('Activeallocs').where('room',isEqualTo:rn).where('bedno',isEqualTo:berth).
+          getDocuments();
+          if(details.documents.isNotEmpty)
+          details.documents.forEach((element) async {
+               var beduser = await Firestore.instance.collection('Profile').document(element.data['allocated_to']).collection('history').document(element.data['reqid']).get();
+                question(context,berth,'Occupied By, Name:'+beduser.data['Folkname']+',Phone No:'+beduser.data['Mobile_Number']+',From:'+beduser.data['from'].substring(0,16)
+              +',to:'+beduser.data['to'].substring(0,16));
+            });
+          else{
+            question(context, berth,' bed is currently, Vacant.');
+          }
+        }
+
 
 
 
@@ -80,12 +86,9 @@ class roomdata extends State<room>{
   MaterialButton beds(Color col,String bedno){
     return MaterialButton(
       padding: EdgeInsets.symmetric(horizontal: 3,vertical: 1),
-      onPressed: (){
-          checkforbed(bedno);
-          if(active){
-            question(context,bedno,'Occupied By, Name:$name, phone: $phone,from :$from, to: $to ');
-            }
-          question(context,bedno,'Currently vacant.');
+      onPressed: () async {
+        // await checkforbed(bedno).then((value) {
+          await getdoc(bedno);
       },
       child: Container(
         height: 100,
@@ -223,24 +226,7 @@ class roomdata extends State<room>{
     }
   }
 
-  Future<bool> checkforbed(String berth) async{
-    var checkforbed = await db.document(docid).collection('Activeallocs').where('room',isEqualTo:room).where('bedno',isEqualTo:berth).
-    getDocuments();
-    var database = await Firestore.instance.collection('Profile');
-    checkforbed.documents.forEach((checking) {
-      if(checking.data['bedno']==berth)
-      setState(() async{
-        active = true;
-        phone = checking.data['Mobile_Number'];
-        var query = await database.document(phone).collection('history').document(checking.data['reqid']).get();
-        name = query.data['Folkname'];
-        from = query.data['from'].substring(0,16);
-        to = query.data['to'].substring(0,16);
-         });
-      });
-
-      }
-
+ 
 
   @override
   void initState() {
@@ -249,7 +235,6 @@ class roomdata extends State<room>{
     smallests(nlb,nmb,nub);
     middles(nlb,nmb,nub);
     merge(nlb,nmb,nub);
-    getdoc();
 
   }
 
