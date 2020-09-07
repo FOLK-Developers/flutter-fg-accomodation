@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:folkguideapp/validity.dart';
 // import 'package:folkguideapp/forwardreq.dart';
 import 'package:intl/intl.dart';
 
@@ -12,79 +13,104 @@ import 'callocation.dart';
 import 'forwardreq.dart';
 // ignore: camel_case_types
 class allocation extends StatefulWidget{
-  allocation({this.center});
-  final String center;
+  allocation({this.center,this.no});
+  final String center,no;
   @override
-  allocationpage createState()=>allocationpage(center: center);
+  allocationpage createState()=>allocationpage(center: center,no: no);
 }
 
 // ignore: camel_case_types
 class allocationpage extends State<allocation>{
-  allocationpage({this.center});
-  final String center;
+   allocationpage({this.center,this.no});
+  final String center,no;
   String zone;
-  num lb=0,mb=0,ub=0,rlb=0,rmb=0,rub=0,count=0,totalr=0,prob=0,allocs=0,alb=0,amb=0,aub=0;
+  num lb=0,mb=0,ub=0,rlb=0,rmb=0,rub=0,count=0,totalr=0,prob=0,allocs=0,alb=0,amb=0,aub=0,highest;
   bool flag=false;
   String note="Loading..",note1="Loading..",req="Loading..",docid;
   static DateTime now = DateTime.now();
   static var  formatter = DateFormat('yyyy-MM-dd');
   static var today = formatter.format(now);
   var collectonRef = Firestore.instance.collection('Centers');
+  var db = Firestore.instance;
+
   // ignore: non_constant_identifier_names
-  List<bedelements> lower_b = [];
+  List<String>lower_b = [];
   // ignore: non_constant_identifier_names
-  List<bedelements> middle_b = [];
+  List<String> middle_b = [];
   // ignore: non_constant_identifier_names
-  List<bedelements> upper_b = [];
+  List<String> upper_b = [];
   // ignore: non_constant_identifier_names
+
+
 
 
 
 
   Future allocater(String berth,String no,String reqid,String doc,num type) async {
-    String bed;
-    num temp;
+    String bed,room;
+    num temp = 0,n;
+    var time = DateFormat('yMMMEd').format(DateTime.now());
+
+    String T_doc;
+      var beds = await collectonRef.where('centre',isEqualTo:center).getDocuments();
+      beds.documents.forEach((checkforbed) {
+        setState(() {
+          T_doc = checkforbed.documentID;
+        });
+        });
     var hUpdate = Firestore.instance.collection('Profile').document(no).collection('history').document(reqid);
     var cUpdate =  Firestore.instance.collection(center).document(today).collection('allrequest').document(doc);
-    var activeallocs = collectonRef.document(docid).collection('Activeallocs');
+    var activeallocs = collectonRef.document(T_doc).collection('Activeallocs');
     if(berth=="LOWER_BERTH"){
-      temp = alb++;
-      bed = lower_b.elementAt(temp).room+','+lower_b.elementAt(temp).bed;
+      // temp = alb;
+      bed = lower_b.elementAt(temp);  
       lower_b.removeAt(temp);
+      // alb++;
     }
     else if(berth=="MIDDLE_BERTH"){
-      temp = amb++;
-      bed = middle_b.elementAt(temp).room+','+middle_b.elementAt(temp).bed;
+      // temp = amb;
+      bed = middle_b.elementAt(temp);
       middle_b.removeAt(temp);
+      // amb++;
     }
     else if(berth=="UPPER_BERTH"){
-      temp = aub++;
-      bed = upper_b.elementAt(temp).room+','+upper_b.elementAt(temp).bed;
+      // temp = aub;
+      bed = upper_b.elementAt(temp);
       upper_b.elementAt(temp);
+      // aub++;
+        }
+
+      for(int i=0;i<bed.length;i++){
+        if(bed[i]==','){
+          n = i;
+          break;
+        }
         }
 
 
       hUpdate.updateData({
               "status": "Ready to occupy",
-              "allocated": bed
+              "allocated": bed,
+              'from':DateTime.now().millisecondsSinceEpoch as String
             }).then((value){
                   cUpdate.updateData({
                       "status": "Ready to occupy",
-                      "allocated": bed,
+                      "allocated":bed,
+                      'from':DateTime.now().millisecondsSinceEpoch as String,
                     });
                   activeallocs.add({
-                        'bedno':lower_b.elementAt(temp).bed,
-                        'room': lower_b.elementAt(temp).room,
+                        'allocated':bed,
                         'allocated_to':no,
                         'reqid':reqid,
-                        'type':type
+                        'type':type,
+                        'room':bed.substring(0,n)
                     });
             });
   }
 
 
 
-//
+
 //  Future<void> bedupdater(String reqid,String berth,String docid,String no,String tbc,num count,num type) async {
 //            await Firestore.instance.collection('users').document(no).
 //            collection('history').document(reqid).updateData({
@@ -108,18 +134,35 @@ class allocationpage extends State<allocation>{
 
 
 
+
+void greatest(num l,num m,num u){
+    setState(() {
+      if(l>=m && l>=u){
+        highest = l;
+      }
+      else if(m>=l && m>=u){
+        highest =m;
+      }
+      else{
+        highest = u;
+      }
+    });
+  }
+
+
 // ignore: non_constant_identifier_names
 void bed_checker(num lb,num mb,num ub,String room){
-    for(int i=1;i<=lb+mb+ub;i++){
+  greatest(lb, mb, ub);
+    for(int i=1;i<=highest;i++){
       setState(() {
          if(i<=lb){
-        lower_b.add(bedelements(room: room,bed: 'lb-$i'));
+        lower_b.add(room+','+'lb-$i');
       }
         if(i<=mb){
-        middle_b.add(bedelements(room: room,bed: 'mb-$i'));
+        middle_b..add(room+','+'mb-$i');
       }
        if(i<=ub){
-        upper_b.add(bedelements(room: room,bed: 'ub-$i'));
+        upper_b..add(room+','+'ub-$i');
         }
         });
       }
@@ -142,13 +185,13 @@ void bed_checker(num lb,num mb,num ub,String room){
     Activeallocs.documents.forEach((activeBeds) {
       setState(() {
         if(activeBeds.data['type']==1){
-        lower_b.remove(bedelements(room:activeBeds.data['room'],bed: activeBeds.data['bedno']));
+        lower_b.remove(activeBeds.data['allocated']);
         }
       else if(activeBeds.data['type']==2){
-        middle_b.remove(bedelements(room:activeBeds.data['room'],bed: activeBeds.data['bedno']));
+        middle_b.remove(activeBeds.data['allocated']);
         }
       else{
-        upper_b.remove(bedelements(room:activeBeds.data['room'],bed: activeBeds.data['bedno']));
+        upper_b.remove(activeBeds.data['allocated']);
         }
         });
         });
@@ -161,6 +204,13 @@ void bed_checker(num lb,num mb,num ub,String room){
 
 
   Future allocaterequests() async {
+   String cdoc;
+          var bed = await collectonRef.where('centre',isEqualTo:center).getDocuments();
+          bed.documents.forEach((checkfor) {
+            setState(() {
+              cdoc = checkfor.documentID;
+            });
+          });
         var db = Firestore.instance.collection(center).document(today).collection('allrequest');
         var docu= await db.where('status',isEqualTo: "Waiting for approval").getDocuments();
         if(docu!=null) {
@@ -202,6 +252,8 @@ void bed_checker(num lb,num mb,num ub,String room){
               }
             }
           });
+          noreqs('Beds allocated successfully.');
+          await bedData();
         }
         else if(count==0){
           noreqs("No beds nor Requests , To allocate bed.");
@@ -216,6 +268,7 @@ void bed_checker(num lb,num mb,num ub,String room){
       Future deleterequests() async {
         var db = Firestore.instance.collection(center).document(today).collection('allrequest');
         var docu= await db.where('status',isEqualTo: "Waiting for approval").getDocuments();
+        var cdelete =  Firestore.instance.collection(center).document(today).collection('allrequests');
         if(docu.documents.isNotEmpty) {
           docu.documents.forEach((element) async {
             await Firestore.instance.collection('Profile').document(
@@ -224,8 +277,7 @@ void bed_checker(num lb,num mb,num ub,String room){
               "status": 'Request was declined.',
               "allocated":"No bed was allocated"
             }).then((value) async {
-              await Firestore.instance.collection(center).document(today).
-              collection('allrequests').document(element.documentID).delete();
+              cdelete.document(element.documentID).delete();
             });
           });
           noreqs("Request's declined, Successfully.");
@@ -239,6 +291,7 @@ void bed_checker(num lb,num mb,num ub,String room){
       void noreqs(String info){
         Scaffold.of(context).showSnackBar(SnackBar(
           content: Text(info),
+          duration: Duration(seconds:3),
         ));
       }
 
@@ -277,6 +330,7 @@ void bed_checker(num lb,num mb,num ub,String room){
     }
 
 
+  
       Future bedData() async {
           // ignore: non_constant_identifier_names
           String TDoc;
@@ -300,9 +354,9 @@ void bed_checker(num lb,num mb,num ub,String room){
                 count = count+lb+mb+ub;
                 });
                 });
-          //  await reqcount("LOWER_BERTH");
-          //  await reqcount("MIDDLE_BERTH");
-          //  await reqcount("UPPER_BERTH");
+           await reqcount("LOWER_BERTH");
+           await reqcount("MIDDLE_BERTH");
+           await reqcount("UPPER_BERTH");
            bed_correcter();
            }
        else{
@@ -384,12 +438,64 @@ void bed_checker(num lb,num mb,num ub,String room){
 
 
 
+   Future expiredbeds() async{
+    // ignore: non_constant_identifier_names
+    String TDoc;
+    String bedno,from,no;
+
+    // ignore: unused_local_variable
+    var ceterdoc,temp,temp1,hUpdate;
+    
+    var centerdoc = await db.collection('Centers').where('centre',isEqualTo:center).getDocuments();
+    centerdoc.documents.forEach((checkforbed) {
+         TDoc = checkforbed.documentID;
+    });
+    int val = DateTime.now().millisecondsSinceEpoch;
+    
+    var activeallocs = db.collection('Centers').document(TDoc).collection('Activeallocs');
+    var cUpdate = db.collection(center).document(today).collection('allrequest');
+    temp1 = await cUpdate.where('status',isEqualTo:'Ready to occupy').
+     getDocuments();
+
+
+    if(temp1.documents.isNotEmpty){
+        // ignore: non_constant_identifier_names
+        temp1.documents.forEach((ExpiredReserv) async{
+          if(int.parse(ExpiredReserv.data['to'])<=val){
+          temp = await activeallocs.where('allocated',isEqualTo:ExpiredReserv.data['allocated']).getDocuments();
+
+          db.collection('Profile').document(ExpiredReserv.data['Mobile_Number']).collection('history').document(ExpiredReserv.data['reqid']).updateData({
+                    'status' : 'Reservation expired'
+                    });
+
+          temp.documents.forEach((deactivate){
+                    activeallocs.document(deactivate.documentID).delete();
+            });           
+
+
+          cUpdate.document(ExpiredReserv.documentID).updateData({
+            'status':'Reservation expired',
+          });
+          }
+        });
+      }
+    }
+     
+
+
+      
+
+
+
       @override
       void initState(){
       super.initState();
-      getdoc();
-      bedData();
       zone = center;
+
+      bedData();
+
+      expiredbeds();
+      getdoc();
       }
 
       @override
@@ -399,6 +505,9 @@ void bed_checker(num lb,num mb,num ub,String room){
             body:Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
+                    // Expanded(child: Text(lower_b.toString(),style: TextStyle(
+                    //   fontSize: 7
+                    //             ),)),
                     Expanded(child:requestlist(center: center)),
                     Container(
                       height: 50,
@@ -519,7 +628,8 @@ class requestlist extends StatelessWidget{
                                         ),),
                                       SizedBox(height: 7.0,),
                                       Text(document['preferred_berth'].toString().toLowerCase()
-                                          +" for "+document['from'].substring(0,16)+' - '+document['to'].substring(0,16),
+                                          +" for "+DateTime.fromMillisecondsSinceEpoch(int.parse(document['from'])).toUtc().toString().substring(0,16)
+                                          +' - '+DateTime.fromMillisecondsSinceEpoch(int.parse(document['to'])).toUtc().toString().substring(0,16),
                                         style: TextStyle(
                                             color: Colors.black,
                                             fontSize: 11
@@ -563,7 +673,8 @@ class requestlist extends StatelessWidget{
                            Navigator.push(context, MaterialPageRoute(builder: (context)=>
                         callocation(berth: document['preferred_berth'],phone:document['Mobile_Number'],
                         message: document['Message'],uname: 
-                        document['Folkname'],from:document['from'].substring(0,16),to:document['to'].substring(0,16),profile: images.elementAt(2),
+                        document['Folkname'],from:document['from']
+                        ,to:document['to'],profile: images.elementAt(2),
                         center:center,doc:document.documentID,reqid:document['reqid'],)));  
                         },
                       ),
@@ -575,7 +686,8 @@ class requestlist extends StatelessWidget{
                         Navigator.push(context, MaterialPageRoute(builder: (context)=>
                         forwardreq(berth: document['preferred_berth'],phone:document['Mobile_Number'],
                         message: document['Message'],uname: 
-                        document['Folkname'],from:document['from'].substring(0,16),to:document['to'].substring(0,16),profile: images.elementAt(2),
+                        document['Folkname'],from:document['from'],to:
+                        document['to'],profile: images.elementAt(2),
                         center:center,doc:document.documentID,reqid:document['reqid'],)));                         
                          },
                       ),
@@ -589,16 +701,3 @@ class requestlist extends StatelessWidget{
 
 
 
-//children: snapshot.data.documents.map((
-//DocumentSnapshot document) {
-
-//)
-//);
-//}).toList(),
-
-
-// ignore: camel_case_types
-class bedelements{
-  bedelements({this.room,this.bed});
-  final String room,bed;
-}

@@ -29,8 +29,9 @@ class berths extends State<bed>{
   final String centers;
   final num nlb,nmb,nub;
   final String berth,profile,uname,message,phone,from,to,reqid,docs;
-  num c=0;
-  String a1,a2,a3;
+  num c=0,type;
+  // ignore: non_constant_identifier_names
+  String a1,a2,a3,From,To;
   // ignore: non_constant_identifier_names
   num highest,smallest,mid;
   List <Row> bed = [];
@@ -203,11 +204,11 @@ class berths extends State<bed>{
         'to':to
         });
       db.document(docid).collection('Activeallocs').add({
-        'bedno':bedno,
-        'room':roomno,
+        'allocated':roomno+','+bedno,
         'allocated_to':phone,
         'reqid':reqid,
-        'type':type
+        'type':type,
+        'room':roomno
         });
         }).then((value) {
           question(context,bedno,'bed no.'+bedno+' from '+roomno+' was successfully allocated to $uname');
@@ -265,8 +266,21 @@ class berths extends State<bed>{
                               color: Colors.green[900],
                               onPressed: (){
                                if(date!='null' && date2!='null'){
+
+                                 From = date.substring(0,10)+time.substring(10,16);
+                                 To = date2.substring(0,10)+time2.substring(10,16);
+                                 setState(() {
+                           
+                                   From =DateTime.utc(int.parse(From.substring(0,4)),int.parse(From.substring(5,7))
+                                                 ,int.parse(From.substring(8,10)),int.parse(From.substring(11,13)),int.parse(From.substring(14,16)),
+                                                 ).millisecondsSinceEpoch.toString();
+                                  To = DateTime.utc(int.parse(To.substring(0,4)),int.parse(To.substring(5,7))
+                                  ,int.parse(To.substring(8,10)),int.parse(To.substring(11,13)),int.parse(To.substring(14,16))).toUtc().millisecondsSinceEpoch.toString(); 
+                                   
+                                 });
+                                 
                                 
-                                 allocating(bedno,date.substring(0,10)+time.substring(10,16),date2.substring(0,10)+time2.substring(10,16),type);
+                                 allocating(bedno,From,To,type);
                                }
 
                               },
@@ -284,10 +298,10 @@ class berths extends State<bed>{
 
   Future<bool> checkforbed(String berth) async{
     bool temp = false;
-    var checkforbed = await db.document(docid).collection('Activeallocs').where('room',isEqualTo:roomno).where('bedno',isEqualTo:berth).
+    var checkforbed = await db.document(docid).collection('Activeallocs').where('allocated',isEqualTo: roomno+','+berth).
     getDocuments();
     checkforbed.documents.forEach((checking) {
-      if(checking.data['bedno']==berth)
+      if(checking.data['allocated']== roomno+','+berth)
       setState(() {
         temp = true;
           });

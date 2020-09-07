@@ -9,17 +9,17 @@ import 'data.dart';
 
 // ignore: camel_case_types
 class mainpage extends StatefulWidget{
-  mainpage({this.center});
-  final center;
+  mainpage({this.center,this.no});
+  final center,no;
   @override
-  actionpage createState()=>actionpage(center:center);
+  actionpage createState()=>actionpage(center:center,no: no);
 }
 
 
 // ignore: camel_case_types
 class actionpage extends State<mainpage> {
-  actionpage({this.center});
-  String center;
+  actionpage({this.center,this.no});
+  String center,no;
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +64,7 @@ class actionpage extends State<mainpage> {
                   ],
                 ),
                 onPressed: () {
-                  Navigator.push(context, MaterialPageRoute(builder:(context)=>data(center: center,)));
+                  Navigator.push(context, MaterialPageRoute(builder:(context)=>data(center: center,no:no)));
                 },
               ),
               SizedBox(width: 17,)
@@ -73,7 +73,7 @@ class actionpage extends State<mainpage> {
         ],
       ),
       body: Center(
-        child: allocation(center: center),
+        child: allocation(center: center,no: no),
       ),
     ),
     );

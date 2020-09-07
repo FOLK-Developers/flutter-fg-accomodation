@@ -301,7 +301,8 @@ class custom_allocation extends State<callocation>{
                                       SizedBox(height:8),
                                       namefields('User-name',uname),
                                       SizedBox(height:5),
-                                      namefields('Request','Requested $berth for $from to $to'),
+                                      namefields('Request','Requested $berth for'+DateTime.fromMillisecondsSinceEpoch(int.parse(from)).toUtc().toString().substring(0,16)+',to'
+                                       +DateTime.fromMillisecondsSinceEpoch(int.parse(to)).toUtc().toString().substring(0,16)),
                                       SizedBox(height:5),
                                       namefields('Phone number', phone),
                                       SizedBox(height:5),

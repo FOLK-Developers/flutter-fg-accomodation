@@ -23,7 +23,7 @@ class forward extends State<forwardreq>{
   final String berth,uname,message,phone,center,from,to,profile,doc,reqid;
   var db  = Firestore.instance.collection('Centers');
   List<String> centers = [];
-  String selectedcenter='Mumbai',fgmessage,docid,fwdmsg;
+  String selectedcenter,fgmessage,docid,fwdmsg;
   TextEditingController fgmessages = TextEditingController();
   List<Container> ele = [];
   String selected='Not selected, Yet';
@@ -31,11 +31,15 @@ class forward extends State<forwardreq>{
   static var  formatter = DateFormat('yyyy-MM-dd');
   static var today = formatter.format(now);
 
+
   Future<void> getcenters() async{
     var db = await Firestore.instance.collection('Centers').getDocuments();
     db.documents.forEach((element){
       setState(() {
+        if(element.data['centre']!=center){
         centers.add(element.data['centre']);
+        selectedcenter = element.data['centre'];   
+        }
       });
     });
   }
@@ -97,7 +101,6 @@ class forward extends State<forwardreq>{
       items: dropdownItems,
       onChanged: (value) {
         setState(() {
-          fwdmsg =fwdmsg=='No message'?'[Fwd from:$center]':fwdmsg+'[Fwd from:$center]';
           selectedcenter = value;
         });
       },
@@ -114,7 +117,6 @@ class forward extends State<forwardreq>{
       itemExtent: 32.0,
       onSelectedItemChanged: (selectedIndex) {
         setState(() {
-          fwdmsg =fwdmsg=='No message'?'[Fwd from:$center]':fwdmsg+'[Fwd from:$center]';
           selectedcenter = centers[selectedIndex];
         });
       },
@@ -128,7 +130,8 @@ class forward extends State<forwardreq>{
     var db = Firestore.instance.collection('Profile').document(phone).collection('history').document(reqid);
     var cRecord =  Firestore.instance.collection(center).document(today).collection('allrequest').document(doc);
     var forward =  Firestore.instance.collection(selectedcenter).document(today).collection('allrequest');
-
+    DateFormat hm = DateFormat('Hm');
+    String temp = now.millisecondsSinceEpoch.toString();
     db.updateData({
       'status':'Forward to $selectedcenter',
       }).then((value){
@@ -144,9 +147,9 @@ class forward extends State<forwardreq>{
                     "allocated":"null",
                     "type":0,
                     "reqid":reqid,
-                    "rtime":from.substring(12,16),
-                    'from':from.substring(0,16),
-                    'to': to.substring(0,16)
+                    "rtime":hm.format(now) ,
+                    'from': temp,
+                    'to': to 
                   });    
                   question(context,'Fwd successfully','Request was successfully forwarded to $selectedcenter center.');                                  
                 });
@@ -161,7 +164,12 @@ class forward extends State<forwardreq>{
     super.initState();
     getcenters();
     setState(() {
-      fwdmsg = message;
+    if(message=='No message'){
+      fwdmsg = '[Fwd from:$center]';
+    }
+    else{
+      fwdmsg = message+'[Fwd from:$center]';
+      }
     });
     ele.add(Request());
     }
@@ -228,7 +236,8 @@ backgroundImage: NetworkImage('https://firebasestorage.googleapis.com/v0/b/folka
                                       SizedBox(height:8),
                                       namefields('User-name', uname),
                                       SizedBox(height:5),
-                                      namefields('Request','Requested $berth for $from to $to'),
+                                      namefields('Request','Requested $berth for'+DateTime.fromMillisecondsSinceEpoch(int.parse(from)).toUtc().toString().substring(0,16)+',to'
+                                       +DateTime.fromMillisecondsSinceEpoch(int.parse(to)).toUtc().toString().substring(0,16)),
                                       SizedBox(height:5),
                                       namefields('Phone number', phone),
                                       SizedBox(height:5),
@@ -307,17 +316,10 @@ Container messages(){
                       maxLines: 3,
                       controller : fgmessages,
                       onChanged:(value){
-                        if(fwdmsg=='No message'){
-                          setState(() {
-                            fwdmsg = '[Fwd from:$center,msg:$value]';
-                          });
-                        }
-                        else{
-                        setState(() {
-                         fwdmsg =fwdmsg+'[Fwd from:$center,msg:$value]';
-                        });
-                        }
-                      },
+                        setState((){
+                            fgmessage = value;
+                             });
+                             },
                       decoration: InputDecoration(
                         contentPadding: EdgeInsets.all(7),
                         fillColor: Colors.white,
@@ -443,6 +445,9 @@ Container messages(){
                   ),
                   color: Colors.green[900],
                   onPressed: (){
+                    if(fgmessage!=null){
+                      fwdmsg = fwdmsg+'[msg:$fgmessage]';
+                    }
                     Forward();
                   },
                   )

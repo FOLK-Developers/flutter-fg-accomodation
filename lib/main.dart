@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:folkguideapp/data.dart';
 // import 'package:folkguideapp/forwardreq.dart';
 import 'mainpage.dart';
 // import 'package:folkguideapp/mainpage.dart';
@@ -16,8 +17,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: myapp(),
-    );
+      home: myapp()
+          );
   }
 }
 
@@ -94,7 +95,7 @@ class authentication extends State<myapp> {
         });
       });
        if(val==n){
-       Navigator.push(context, MaterialPageRoute(builder:(context)=>mainpage(center: selectedcenter,)));
+       Navigator.push(context, MaterialPageRoute(builder:(context)=>mainpage(center: selectedcenter,no:no)));
      }
      else{
          setState((){

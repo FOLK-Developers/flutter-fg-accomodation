@@ -65,13 +65,14 @@ class roomdata extends State<room>{
 
    Future getdoc(berth) async{
      
-     var details = await Firestore.instance.collection('Centers').document(doc).collection('Activeallocs').where('room',isEqualTo:rn).where('bedno',isEqualTo:berth).
+     var details = await Firestore.instance.collection('Centers').document(doc).collection('Activeallocs').where('allocated',isEqualTo:rn+','+berth).
           getDocuments();
           if(details.documents.isNotEmpty)
           details.documents.forEach((element) async {
                var beduser = await Firestore.instance.collection('Profile').document(element.data['allocated_to']).collection('history').document(element.data['reqid']).get();
-                question(context,berth,'Occupied By, Name:'+beduser.data['Folkname']+',Phone No:'+beduser.data['Mobile_Number']+',From:'+beduser.data['from'].substring(0,16)
-              +',to:'+beduser.data['to'].substring(0,16));
+                question(context,berth,'Occupied By, Name:'+beduser.data['Folkname']+',Phone No:'+beduser.data['Mobile_Number']+',From:'+
+                DateTime.fromMillisecondsSinceEpoch(int.parse(beduser.data['from'])).toUtc().toString().substring(0,16)
+              +',to:'+DateTime.fromMillisecondsSinceEpoch(int.parse(beduser.data['to'])).toUtc().toString().substring(0,16));
             });
           else{
             question(context, berth,' bed is currently, Vacant.');

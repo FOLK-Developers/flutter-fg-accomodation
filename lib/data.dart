@@ -9,16 +9,16 @@ import 'package:intl/intl.dart';
 
 // ignore: camel_case_types
 class data extends StatefulWidget{
-  data({this.center});
-  final String center;
+  data({this.center,this.no});
+  final String center,no;
   @override
-  bedavailable createState()=>bedavailable(center: center,type: false);
+  bedavailable createState()=>bedavailable(center: center,type: false,no: no);
 }
 
 // ignore: camel_case_types
 class bedavailable extends State<data>{
-  bedavailable({this.center,this.type});
-  final String center;
+  bedavailable({this.center,this.type,this.no});
+  final String center,no;
   final bool type;
   num lb=0,mb=0,ub=0,rlb=0,rmb=0,rub=0,count=0,totalr=0,prob=0,allocs=0,alb=0,amb=0,aub=0,i=0;
   String location='',admin='',rname='',doc='',docid='';
@@ -32,10 +32,18 @@ class bedavailable extends State<data>{
   TextEditingController upperberth = TextEditingController();
   TextEditingController roomname = TextEditingController();
   List<Container> roomslist = [];
+  bool adm = false;
 
 
+ Future checkforadmin() async{
+   var admr = await Firestore.instance.collection('FOLKGuides').where('mobile_number',isEqualTo:no).getDocuments();
+   admr.documents.forEach((ele){
+     setState(() {
+       adm = ele.data['admin'];
+     });
 
-
+   });
+ }
 
 
 
@@ -187,29 +195,42 @@ class bedavailable extends State<data>{
     var docu = await db.where("preferred_berth",isEqualTo:berth).where('status',isEqualTo:'Waiting for approval').getDocuments();
        if(docu.documents.isNotEmpty) {
          docu.documents.forEach((element) {
-           setState(() {
              if (berth == "LOWER_BERTH") {
-               rlb++;
-               totalr++;
+               setState(() {
+                  rlb++;
+                  totalr++;
+               });  
              }
              else if (berth == "MIDDLE_BERTH") {
-               rmb++;
-               totalr++;
+               setState(() {
+                  rmb++;
+                  totalr++;
+                  });
               }
              else {
-               rub++;
-               totalr++;
+               setState(() {
+                rub++;
+                totalr++;               
+                });
              }
-           });
          });
        }
        }
+
+
+    // bool checkroom(String room){
+    // var checkroom = Firestore.instance.collection(center).document(today).collection('Activeallocs').where('room',isEqualTo:room).getDocuments();
+
+    // return checkroom.documents.isEmpty;
+    
+    // }
+     
    
 
 
 
 
-  Container rooms(String rn,num l,num m,num u,bool flag,num i){
+  Container rooms(String rn,num l,num m,num u,bool flag,num i,bool edit){
     return Container(
       child: Column(
         crossAxisAlignment:CrossAxisAlignment.stretch,
@@ -245,9 +266,9 @@ class bedavailable extends State<data>{
                           child:SizedBox(width: 40,),
                         ),
                         IconButton(
-                          icon: Icon(Icons.edit,color:flag==false?Colors.black:Colors.transparent),
+                          icon: Icon(Icons.edit,color:adm==true?Colors.black:Colors.transparent),
                           onPressed: (){
-                            if(!flag){
+                            if(!flag && edit && adm){
                               setState(() {
                               lowerberth.text = l.toString();
                               upperberth.text = u.toString();
@@ -265,9 +286,9 @@ class bedavailable extends State<data>{
                           },
                         ),
                         IconButton(
-                          icon: Icon(Icons.delete_forever,color:flag==false?Colors.black:Colors.transparent),
-                          onPressed: (){
-                              if(!flag){
+                          icon: Icon(Icons.delete_forever,color:adm==true?Colors.black:Colors.transparent),
+                         onPressed: () {
+                            if(!flag && edit && adm){
                               setState(() {
                             question(context,'Remove, $rn','Do you really want to remove ,$rn.',rn).
                             then((value) {
@@ -331,12 +352,13 @@ class bedavailable extends State<data>{
     .getDocuments();
     var db = await Firestore.instance.collection('Centers').document(doc).get();
 
-            centerdoc.documents.forEach((roomN) {
+            centerdoc.documents.forEach((roomN) async{
+              var checkroom = await Firestore.instance.collection(center).document(today).collection('Activeallocs').where('room',isEqualTo:roomN.documentID).getDocuments();
               temp1 = temp1 + roomN.data['lowerberth'];
               temp2 = temp2 + roomN.data['middleberth'];
               temp3 = temp3 + roomN.data['upperberth'];
               roomslist.add(rooms(roomN.documentID, roomN.data['lowerberth'],
-                  roomN.data['middleberth'], roomN.data['upperberth'],type,i));
+                  roomN.data['middleberth'], roomN.data['upperberth'],type,i,checkroom.documents.isEmpty));
                   setState(() {
                     i++;
                     });
@@ -350,6 +372,7 @@ class bedavailable extends State<data>{
       count = temp1 + temp2 + temp3;
     });
   }
+
 
 
   
@@ -489,10 +512,12 @@ class bedavailable extends State<data>{
                         Navigator.of(context).pop();
                     }
                   else{
-                    setState(() {
+                    setState(() async {
                        updates(rname,lb1, mb1, ub1);
-                         roomslist.add(rooms(roomname.text,num.parse(lowerberth.text),
-                      num.parse(middleberth.text),num.parse(upperberth.text),type,i));
+                       var checkroom = await Firestore.instance.collection(center).document(today).collection('Activeallocs').
+                       where('room',isEqualTo:roomname.text).getDocuments();
+                       roomslist.add(rooms(roomname.text,num.parse(lowerberth.text),
+                      num.parse(middleberth.text),num.parse(upperberth.text),type,i,checkroom.documents.isEmpty));
                       lowerberth.clear();
                       upperberth.clear();
                       middleberth.clear();
@@ -515,6 +540,8 @@ class bedavailable extends State<data>{
   @override
   void initState(){
     super.initState();
+    checkforadmin();
+
     getdoc();
     addroom();
  
@@ -563,7 +590,7 @@ class bedavailable extends State<data>{
                      child: Column(
                        crossAxisAlignment: CrossAxisAlignment.start,
                        children: [
-                         namefields('Administrator', admin),
+                         namefields('Administrator',admin),
                          SizedBox(height: 2,),
                          namefields('Location',location),
                          SizedBox(height: 2,),
