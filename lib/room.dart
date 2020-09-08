@@ -253,7 +253,7 @@ class roomdata extends State<room>{
                 onPressed: (){
                   Navigator.of(context).pop();
                   Navigator.push(context, MaterialPageRoute(builder: (context)=>
-                      data(center:centers)));
+                      data(center:centers,no:phone,)));
                 },
               );
             },

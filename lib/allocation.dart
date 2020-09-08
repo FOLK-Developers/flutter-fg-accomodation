@@ -1,3 +1,4 @@
+
 import 'dart:math';
 import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -5,7 +6,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:folkguideapp/validity.dart';
 // import 'package:folkguideapp/forwardreq.dart';
 import 'package:intl/intl.dart';
 
@@ -49,8 +49,10 @@ class allocationpage extends State<allocation>{
   Future allocater(String berth,String no,String reqid,String doc,num type) async {
     String bed,room;
     num temp = 0,n;
+    // ignore: unused_local_variable
     var time = DateFormat('yMMMEd').format(DateTime.now());
 
+    // ignore: non_constant_identifier_names
     String T_doc;
       var beds = await collectonRef.where('centre',isEqualTo:center).getDocuments();
       beds.documents.forEach((checkforbed) {
@@ -79,31 +81,37 @@ class allocationpage extends State<allocation>{
       upper_b.elementAt(temp);
       // aub++;
         }
+        
 
+      if(bed.substring(0,n)!=room){
       for(int i=0;i<bed.length;i++){
         if(bed[i]==','){
-          n = i;
+          setState(() {
+            room = bed.substring(0,i);
+            n = i;
+          });
           break;
         }
         }
+      }
 
-
+      
       hUpdate.updateData({
               "status": "Ready to occupy",
               "allocated": bed,
-              'from':DateTime.now().millisecondsSinceEpoch as String
+              'from':DateTime.now().millisecondsSinceEpoch.toString()
             }).then((value){
                   cUpdate.updateData({
                       "status": "Ready to occupy",
                       "allocated":bed,
-                      'from':DateTime.now().millisecondsSinceEpoch as String,
+                      'from':DateTime.now().millisecondsSinceEpoch.toString(),
                     });
                   activeallocs.add({
                         'allocated':bed,
                         'allocated_to':no,
                         'reqid':reqid,
                         'type':type,
-                        'room':bed.substring(0,n)
+                        'room':room
                     });
             });
   }
@@ -204,6 +212,7 @@ void bed_checker(num lb,num mb,num ub,String room){
 
 
   Future allocaterequests() async {
+   // ignore: unused_local_variable
    String cdoc;
           var bed = await collectonRef.where('centre',isEqualTo:center).getDocuments();
           bed.documents.forEach((checkfor) {
@@ -252,7 +261,7 @@ void bed_checker(num lb,num mb,num ub,String room){
               }
             }
           });
-          noreqs('Beds allocated successfully.');
+          // noreqs('Beds allocated successfully.');
           await bedData();
         }
         else if(count==0){
@@ -295,24 +304,13 @@ void bed_checker(num lb,num mb,num ub,String room){
         ));
       }
 
-  Future reqcount(String berth) async {
+  Future reqcount() async {
     var db = Firestore.instance.collection(center).document(today).collection('allrequest');
-    var docu = await db.where("preferred_berth",isEqualTo:berth).where('status',isEqualTo:'Waiting for approval').getDocuments();
+    var docu = await db.where('status',isEqualTo:'Waiting for approval').getDocuments();
        if(docu.documents.isNotEmpty) {
          docu.documents.forEach((element) {
            setState(() {
-             if (berth == "LOWER_BERTH") {
-               rlb++;
-               totalr++;
-             }
-             else if (berth == "MIDDLE_BERTH") {
-               rmb++;
-               totalr++;
-              }
-             else {
-               rub++;
-               totalr++;
-             }
+             totalr++;
            });
          });
        }
@@ -354,9 +352,7 @@ void bed_checker(num lb,num mb,num ub,String room){
                 count = count+lb+mb+ub;
                 });
                 });
-           await reqcount("LOWER_BERTH");
-           await reqcount("MIDDLE_BERTH");
-           await reqcount("UPPER_BERTH");
+           await reqcount();
            bed_correcter();
            }
        else{
@@ -441,6 +437,7 @@ void bed_checker(num lb,num mb,num ub,String room){
    Future expiredbeds() async{
     // ignore: non_constant_identifier_names
     String TDoc;
+    // ignore: unused_local_variable
     String bedno,from,no;
 
     // ignore: unused_local_variable
@@ -566,14 +563,18 @@ class requestlist extends StatelessWidget{
   static DateTime now = DateTime.now();
   static var  formatter = DateFormat('yyyy-MM-dd');
   static var today = formatter.format(now);
-  final List<String> images = ['https://firebasestorage.googleapis.com/v0/b/folkapp-a0871.''appspot.com/o/pexels-fabian-wiktor-994605.jpg?alt=media&token=75531d8e'
-      '   -3cf5-4f3d-b06b-cc7745114b37','https://firebasestorage.googleapis.com/v0/b/folkapp-a0871.appspot.com/o/pexels-jiarong-deng-1034662.jpg?alt=media&'
-      'token=c827d22a-4d31-4747-97f9-7ce32a05d7ba','https://firebasestorage.googleapis.com/v0/b/folkapp-a0871.appspot.com/o/pexels-pavlo-luchkovski-337909.'
-  'jpg?alt=media&token=1a650cfa-752c-440e-81f3-56fd92da5923','https://firebasestorage.googleapis.com/v0/b/folkapp-a0871.appspot.com/o/pexels-ricardo-esqui'
-      'vel-1586298.jpg?alt=media&token=39c1928e-88f9-4754-ab2d-4c38fc518da3','https://firebasestorage.googleapis.com/v0/b/folkapp-a0871.appspot.com/o/pexe'
-      'ls-stijn-dijkstra-2583852.jpg?alt=media&token=f9308f22-ec5c-44aa-99bc-3ec99c1157f0','https://firebasestorage.googleapis.com/v0/b/folkapp-a0871.apps'
-      'pot.com/o/pexels-todd-trapani-2754200.jpg?alt=media&token=ae149bf0-412d-4880-819c-33352aafa2a6','https://firebasestorage.googleapis.com/v0/b/folkapp'
-      '-a0871.appspot.com/o/pexels-sourav-mishra-1149831.jpg?alt=media&token=cf023b19-f06e-4e64-baaa-d7d2398bf0b6'];
+  final List<String> images = ['https://firebasestorage.googleapis.com/v0/b/folkapp-a0871.appspot.com/o/pexels-fabian-wiktor-994605.jpg?alt=media&token=75531d8e-3cf5-4f3d-b06b-cc7745114b37',
+  'https://firebasestorage.googleapis.com/v0/b/folkapp-a0871.appspot.com/o/pexels-jiarong-deng-1034662.jpg?alt=media&token=c827d22a-4d31-4747-97f9-7ce32a05d7ba',
+  'https://firebasestorage.googleapis.com/v0/b/folkapp-a0871.appspot.com/o/pexels-pavlo-luchkovski-337909.jpg?alt=media&token=1a650cfa-752c-440e-81f3-56fd92da5923',
+  'https://firebasestorage.googleapis.com/v0/b/folkapp-a0871.appspot.com/o/pexels-ricardo-esquivel-1586298.jpg?alt=media&token=39c1928e-88f9-4754-ab2d-4c38fc518da3',
+  'https://firebasestorage.googleapis.com/v0/b/folkapp-a0871.appspot.com/o/pexels-stijn-dijkstra-2583852.jpg?alt=media&token=f9308f22-ec5c-44aa-99bc-3ec99c1157f0',
+  'https://firebasestorage.googleapis.com/v0/b/folkapp-a0871.appspot.com/o/pexels-todd-trapani-2754200.jpg?alt=media&token=ae149bf0-412d-4880-819c-33352aafa2a6',
+  'https://firebasestorage.googleapis.com/v0/b/folkapp-a0871.appspot.com/o/pexels-sourav-mishra-1149831.jpg?alt=media&token=cf023b19-f06e-4e64-baaa-d7d2398bf0b6'];
+
+
+     
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -586,8 +587,12 @@ class requestlist extends StatelessWidget{
           if (snapshot.hasError)
             return new Text('Error: ${snapshot.error}');
           switch (snapshot.connectionState) {
-            case ConnectionState.waiting:
-              return new Text('Loading...');
+            // case ConnectionState.waiting:
+            //   return new Text('Loading...');
+            // case ConnectionState.active:
+            //   return new Text('Loading');
+
+               
             default: return  ListView(
                 children: snapshot.data.documents.map((document) {
                   return new  Slidable(
@@ -609,6 +614,8 @@ class requestlist extends StatelessWidget{
                                       alignment: Alignment.topRight,
                                       child:CircleAvatar(
                                         backgroundImage: NetworkImage(images.elementAt(Random().nextInt(6))),
+                                        //   document['preferred_berth']=='MIDDLE_BERTH'?images.elementAt(3):
+                                        // document['preferred_berth']=='UPPER_BERTH'?images.elementAt(2):images.elementAt(0)),
                                         backgroundColor: Colors.green[900],
                                         radius: 25,
                                       ),

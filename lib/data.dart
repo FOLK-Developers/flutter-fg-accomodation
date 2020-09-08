@@ -190,18 +190,18 @@ class bedavailable extends State<data>{
   }
 
 
-  Future reqcount(String berth) async {
+  Future reqcount() async {
     var db = Firestore.instance.collection(center).document(today).collection('allrequest');
-    var docu = await db.where("preferred_berth",isEqualTo:berth).where('status',isEqualTo:'Waiting for approval').getDocuments();
+    var docu = await db.where('status',isEqualTo:'Waiting for approval').getDocuments();
        if(docu.documents.isNotEmpty) {
          docu.documents.forEach((element) {
-             if (berth == "LOWER_BERTH") {
+             if (element.data['preferred_berth']=="LOWER_BERTH") {
                setState(() {
                   rlb++;
                   totalr++;
                });  
              }
-             else if (berth == "MIDDLE_BERTH") {
+             else if (element.data['preferred_berth']== "MIDDLE_BERTH") {
                setState(() {
                   rmb++;
                   totalr++;
@@ -336,10 +336,9 @@ class bedavailable extends State<data>{
   Future<void> addroom() async{
     num temp1=0,temp2=0,temp3=0;
     String flag='';
+    var checkroom;
+    var check =  Firestore.instance.collection(center).document(today).collection('Activeallocs');
     roomslist.clear();
-    await reqcount('LOWER_BERTH');
-    await reqcount('MIIDLE_BERTH');
-    await reqcount('UPPER_BERTH');
     var collectionRef = await Firestore.instance.collection('Centers').where('centre',isEqualTo:center).getDocuments();
       collectionRef.documents.forEach((element) {
         flag = element.documentID;
@@ -353,10 +352,10 @@ class bedavailable extends State<data>{
     var db = await Firestore.instance.collection('Centers').document(doc).get();
 
             centerdoc.documents.forEach((roomN) async{
-              var checkroom = await Firestore.instance.collection(center).document(today).collection('Activeallocs').where('room',isEqualTo:roomN.documentID).getDocuments();
               temp1 = temp1 + roomN.data['lowerberth'];
               temp2 = temp2 + roomN.data['middleberth'];
               temp3 = temp3 + roomN.data['upperberth'];
+              checkroom = await check.where('room',isEqualTo:roomN.documentID).getDocuments();
               roomslist.add(rooms(roomN.documentID, roomN.data['lowerberth'],
                   roomN.data['middleberth'], roomN.data['upperberth'],type,i,checkroom.documents.isEmpty));
                   setState(() {
@@ -364,13 +363,15 @@ class bedavailable extends State<data>{
                     });
             });
     setState((){
-      // admin =  db.data['admin'];
-      location = db.data['centre'];
       lb = temp1;
       mb = temp2;
       ub = temp3;
       count = temp1 + temp2 + temp3;
+      admin =  db.data['admin']!='null'?'':db.data['admin'];
+      location = db.data['centre'];
+   
     });
+
   }
 
 
@@ -545,6 +546,7 @@ class bedavailable extends State<data>{
     getdoc();
     addroom();
  
+     reqcount();
 
 
   }
@@ -564,7 +566,7 @@ class bedavailable extends State<data>{
                 color: Colors.green[900],
                 onPressed: (){
                   Navigator.of(context).pop();
-                  Navigator.push(context, MaterialPageRoute(builder: (context)=>mainpage(center:center,)));
+                  Navigator.push(context, MaterialPageRoute(builder: (context)=>mainpage(center:center,no: no,)));
                 },
               );
             },
@@ -671,10 +673,12 @@ class bedavailable extends State<data>{
                      crossAxisAlignment: CrossAxisAlignment.end,
                      children: [
                        IconButton(
-                         icon: Icon(Icons.add_circle,color: Colors.green[900],),
+                         icon: Icon(Icons.add_circle,color:adm==true?Colors.green[900]:Colors.transparent,),
                          iconSize: 55,
                          onPressed: (){
+                           if(adm){
                             updatedata(context,'Add room','Add','no');
+                           }
                          },
                        ),
                        SizedBox(width: 25,)

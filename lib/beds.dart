@@ -275,7 +275,7 @@ class berths extends State<bed>{
                                                  ,int.parse(From.substring(8,10)),int.parse(From.substring(11,13)),int.parse(From.substring(14,16)),
                                                  ).millisecondsSinceEpoch.toString();
                                   To = DateTime.utc(int.parse(To.substring(0,4)),int.parse(To.substring(5,7))
-                                  ,int.parse(To.substring(8,10)),int.parse(To.substring(11,13)),int.parse(To.substring(14,16))).toUtc().millisecondsSinceEpoch.toString(); 
+                                  ,int.parse(To.substring(8,10)),int.parse(To.substring(11,13)),int.parse(To.substring(14,16))).millisecondsSinceEpoch.toString(); 
                                    
                                  });
                                  
