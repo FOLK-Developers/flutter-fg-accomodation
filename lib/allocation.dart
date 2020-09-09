@@ -82,7 +82,10 @@ class allocationpage extends State<allocation>{
       upper_b.elementAt(temp);
       // aub++;
         }
-        
+    String date = DateTime.now().toString();
+    var  val =DateTime.utc(int.parse(date.substring(0,4)),int.parse(date.substring(5,7))
+     ,int.parse(date.substring(8,10)),int.parse(date.substring(11,13)),int.parse(date.substring(14,16)),
+     int.parse(date.substring(17,19))).millisecondsSinceEpoch.toString();
 
       if(bed.substring(0,n)!=room){
       for(int i=0;i<bed.length;i++){
@@ -95,17 +98,22 @@ class allocationpage extends State<allocation>{
         }
         }
       }
+      else{
+        setState((){
+          room = room;
+        });
+      }
 
       
       hUpdate.updateData({
               "status": "Ready to occupy",
               "allocated": bed,
-              'from':DateTime.now().millisecondsSinceEpoch.toString()
+              'from':val
             }).then((value){
                   cUpdate.updateData({
                       "status": "Ready to occupy",
                       "allocated":bed,
-                      'from':DateTime.now().millisecondsSinceEpoch.toString(),
+                      'from':val,
                     });
                   activeallocs.add({
                         'allocated':bed,
