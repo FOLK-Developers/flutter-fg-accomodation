@@ -27,6 +27,7 @@ class allocationpage extends State<allocation>{
   num lb=0,mb=0,ub=0,rlb=0,rmb=0,rub=0,count=0,totalr=0,prob=0,allocs=0,alb=0,amb=0,aub=0,highest;
   bool flag=false;
   String note="Loading..",note1="Loading..",req="Loading..",docid;
+  bool adm=false;
   static DateTime now = DateTime.now();
   static var  formatter = DateFormat('yyyy-MM-dd');
   static var today = formatter.format(now);
@@ -272,6 +273,17 @@ void bed_checker(num lb,num mb,num ub,String room){
         }
       }
 
+  Future checkforadmin() async{
+   var admr = await Firestore.instance.collection('FOLKGuides').where('mobile_number',isEqualTo:no).getDocuments();
+   admr.documents.forEach((ele){
+     setState(() {
+       adm = ele.data['admin'];
+     });
+
+   });
+
+ }
+
 
 
       Future deleterequests() async {
@@ -332,6 +344,8 @@ void bed_checker(num lb,num mb,num ub,String room){
       Future bedData() async {
           // ignore: non_constant_identifier_names
           String TDoc;
+          await checkforadmin();
+
           var bed = await collectonRef.where('centre',isEqualTo:center).getDocuments();
           bed.documents.forEach((checkforbed) {
             setState(() {
@@ -356,7 +370,7 @@ void bed_checker(num lb,num mb,num ub,String room){
            bed_correcter();
            }
        else{
-         setState((){
+         setState(() async{
            note="There is no requests to allocate beds..";
            note1="There is no requests to decline requests..";
            req="No, Folk have requested for bed today.";
@@ -462,7 +476,7 @@ void bed_checker(num lb,num mb,num ub,String room){
           temp = await activeallocs.where('allocated',isEqualTo:ExpiredReserv.data['allocated']).getDocuments();
 
           db.collection('Profile').document(ExpiredReserv.data['Mobile_Number']).collection('history').document(ExpiredReserv.data['reqid']).updateData({
-                    'status' : 'Reservation expired'
+                    'status' : 'Request expired'
                     });
 
           temp.documents.forEach((deactivate){
@@ -471,7 +485,7 @@ void bed_checker(num lb,num mb,num ub,String room){
 
 
           cUpdate.document(ExpiredReserv.documentID).updateData({
-            'status':'Reservation expired',
+            'status':'Request expired',
           });
           }
         });
@@ -488,9 +502,8 @@ void bed_checker(num lb,num mb,num ub,String room){
       void initState(){
       super.initState();
       zone = center;
-
+      
       bedData();
-
       expiredbeds();
       getdoc();
       }
@@ -505,7 +518,7 @@ void bed_checker(num lb,num mb,num ub,String room){
                     // Expanded(child: Text(lower_b.toString(),style: TextStyle(
                     //   fontSize: 7
                     //             ),)),
-                    Expanded(child:requestlist(center: center)),
+                    Expanded(child:requestlist(center: center,adm: adm,)),
                     Container(
                       height: 50,
                       color: Colors.transparent,
@@ -558,8 +571,9 @@ void bed_checker(num lb,num mb,num ub,String room){
 // ignore: must_be_immutable
 // ignore: camel_case_types
 class requestlist extends StatelessWidget{
-  requestlist({this.center});
+  requestlist({this.center,this.adm});
   final String center;
+  final bool adm;
   static DateTime now = DateTime.now();
   static var  formatter = DateFormat('yyyy-MM-dd');
   static var today = formatter.format(now);
@@ -571,16 +585,15 @@ class requestlist extends StatelessWidget{
   'https://firebasestorage.googleapis.com/v0/b/folkapp-a0871.appspot.com/o/pexels-todd-trapani-2754200.jpg?alt=media&token=ae149bf0-412d-4880-819c-33352aafa2a6',
   'https://firebasestorage.googleapis.com/v0/b/folkapp-a0871.appspot.com/o/pexels-sourav-mishra-1149831.jpg?alt=media&token=cf023b19-f06e-4e64-baaa-d7d2398bf0b6'];
 
-
+   
      
-
 
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
         stream: Firestore.instance.collection(center).document(today).
-        collection('allrequest').where('status',isEqualTo: "Waiting for approval").
+        collection('allrequest').where('status',isEqualTo: "Waiting for approval").where('admin',isEqualTo:adm==null?false:adm).
         snapshots(),
         builder: (BuildContext context,
             AsyncSnapshot<QuerySnapshot> snapshot) {

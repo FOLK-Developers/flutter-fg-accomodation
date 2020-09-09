@@ -8,19 +8,19 @@ import 'package:intl/intl.dart';
 // ignore: camel_case_types
 class forwardreq extends StatefulWidget{
   forwardreq({this.berth,this.profile,this.uname,this.message,this.phone,
-  this.from,this.to,this.center,this.doc,this.reqid});
-  final String berth,profile,uname,message,phone,center,from,to,doc,reqid;
+  this.from,this.to,this.center,this.doc,this.reqid,this.no});
+  final String berth,profile,uname,message,phone,center,from,to,doc,reqid,no;
      @override
      forward createState()=>forward( berth: berth,
-     uname: uname,message: message,phone: phone,center: center,from:from,to:to,doc: doc,reqid: reqid);
+     uname: uname,message: message,phone: phone,center: center,from:from,to:to,doc: doc,reqid: reqid,no: no);
     
 }
 
 // ignore: camel_case_types
 class forward extends State<forwardreq>{
  forward({this.berth,this.profile,this.uname,this.message,this.phone,
-  this.from,this.to,this.center,this.doc,this.reqid});
-  final String berth,uname,message,phone,center,from,to,profile,doc,reqid;
+  this.from,this.to,this.center,this.doc,this.reqid,this.no});
+  final String berth,uname,message,phone,center,from,to,profile,doc,reqid,no;
   var db  = Firestore.instance.collection('Centers');
   List<String> centers = [];
   String selectedcenter,fgmessage,docid,fwdmsg;
@@ -38,10 +38,15 @@ class forward extends State<forwardreq>{
       setState(() {
         if(element.data['centre']!=center){
         centers.add(element.data['centre']);
-        selectedcenter = element.data['centre'];   
+                  selectedcenter = element.data['centre'];   
+
         }
+        else{
+          centers.add('Admin');
+           }
       });
     });
+
   }
 
     Future getdoc() async{
@@ -75,7 +80,7 @@ class forward extends State<forwardreq>{
                 onPressed: () async{
                     Navigator.of(context).pop();
                     Navigator.push(context, MaterialPageRoute(builder: (context)=>
-                      mainpage(center: center,)));
+                      mainpage(center: center,no: no,)));
 
                
                 },
@@ -132,6 +137,16 @@ class forward extends State<forwardreq>{
     var forward =  Firestore.instance.collection(selectedcenter).document(today).collection('allrequest');
     DateFormat hm = DateFormat('Hm');
     String temp = now.millisecondsSinceEpoch.toString();
+    if(selectedcenter=='Admin'){
+
+     
+          cRecord.updateData({
+              'admin':true
+              });
+    
+
+    }
+    else{
     db.updateData({
       'status':'Forward to $selectedcenter',
       }).then((value){
@@ -154,6 +169,7 @@ class forward extends State<forwardreq>{
                   question(context,'Fwd successfully','Request was successfully forwarded to $selectedcenter center.');                                  
                 });
                 });
+    }
 
   }
 
@@ -362,7 +378,7 @@ Container messages(){
                 color: Colors.green[900],
                 onPressed: (){
                   Navigator.of(context).pop();
-                  Navigator.push(context, MaterialPageRoute(builder: (context)=>mainpage(center:center,)));
+                  Navigator.push(context, MaterialPageRoute(builder: (context)=>mainpage(center:center,no: no,)));
                 },
               );
             },

@@ -9,18 +9,18 @@ import 'package:folkguideapp/data.dart';
 
 // ignore: camel_case_types
 class room extends StatefulWidget{
-  room({this.roomno,this.centers,this.nlb,this.nmb,this.nub,this.doc});
+  room({this.roomno,this.centers,this.nlb,this.nmb,this.nub,this.doc,this.no});
   final String roomno;
-  final String centers,doc;
+  final String centers,doc,no;
   final num nlb,nmb,nub;
-  roomdata createState()=>roomdata(rn: roomno,centers: centers,nlb: nlb,nmb: nmb,nub: nub,doc: doc);
+  roomdata createState()=>roomdata(rn: roomno,centers: centers,nlb: nlb,nmb: nmb,nub: nub,doc: doc,no: no);
 }
 
 // ignore: camel_case_types
 class roomdata extends State<room>{
-  roomdata({this.rn,this.centers,this.nlb,this.nmb,this.nub,this.doc});
+  roomdata({this.rn,this.centers,this.nlb,this.nmb,this.nub,this.doc,this.no});
   final String rn;
-  final String centers,doc;
+  final String centers,doc,no;
   num nlb,nmb,nub;
   num c=0;
   String a1,a2,a3,docid,name='',phone='',from='',to='';
@@ -253,7 +253,7 @@ class roomdata extends State<room>{
                 onPressed: (){
                   Navigator.of(context).pop();
                   Navigator.push(context, MaterialPageRoute(builder: (context)=>
-                      data(center:centers,no:phone,)));
+                      data(center:centers,no:no,)));
                 },
               );
             },

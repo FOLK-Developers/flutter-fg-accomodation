@@ -244,7 +244,7 @@ class bedavailable extends State<data>{
             child: FlatButton(
               onPressed: (){
                   Navigator.push(context,MaterialPageRoute(builder: (context) =>
-                      room(roomno: rn,centers: center,nlb: l,nmb: m,nub: u,doc:docid,),));
+                      room(roomno: rn,centers: center,nlb: l,nmb: m,nub: u,doc:docid,no:no),));
                 },
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal:1,vertical:5),

@@ -8,18 +8,18 @@ import 'beds.dart';
 // ignore: camel_case_types
 class callocation extends StatefulWidget{
   callocation({this.berth,this.profile,this.uname,this.message,this.phone,
-  this.from,this.to,this.center,this.doc,this.reqid});
-  final String berth,profile,uname,message,phone,center,from,to,doc,reqid;
+  this.from,this.to,this.center,this.doc,this.reqid,this.no});
+  final String berth,profile,uname,message,phone,center,from,to,doc,reqid,no;
   
    @override
    custom_allocation createState()=>custom_allocation(berth: berth,
-     uname:uname,message: message,phone: phone,center: center,from:from,to:to,docs: doc,reqid: reqid);
+     uname:uname,message: message,phone: phone,center: center,from:from,to:to,docs: doc,reqid: reqid,no: no);
 }
 // ignore: camel_case_types
 class custom_allocation extends State<callocation>{
    custom_allocation({this.berth,this.profile,this.uname,this.message,this.phone,
-  this.from,this.to,this.center,this.docs,this.reqid});
-  final String berth,profile,uname,message,phone,center,from,to,docs,reqid;
+  this.from,this.to,this.center,this.docs,this.reqid,this.no});
+  final String berth,profile,uname,message,phone,center,from,to,docs,reqid,no;
   String lroomn;
   bool count;
   String fgmessage,doc,selected='No,room selected';
@@ -248,7 +248,7 @@ class custom_allocation extends State<callocation>{
                 color: Colors.green[900],
                 onPressed: (){
                   Navigator.of(context).pop();
-                  Navigator.push(context, MaterialPageRoute(builder: (context)=>mainpage(center:center,)));
+                  Navigator.push(context, MaterialPageRoute(builder: (context)=>mainpage(center:center,no: no,)));
                 },
               );
             },
@@ -382,7 +382,7 @@ class custom_allocation extends State<callocation>{
                                 if(count){
                                      Navigator.push(context, MaterialPageRoute(builder: (context)=>bed(berth: berth,
                                       uname: uname,message: message,phone: phone,from:from,to:to,
-                                      roomno:selected,centers: center,nlb:lower ,nmb:middle,nub:upper,docs: docs,reqid: reqid,)));
+                                      roomno:selected,centers: center,nlb:lower ,nmb:middle,nub:upper,docs: docs,reqid: reqid,no: no,)));
                                       }
                                  },)
                           )

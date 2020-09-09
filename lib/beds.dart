@@ -11,24 +11,24 @@ import 'mainpage.dart';
 // ignore: camel_case_types
 class bed extends StatefulWidget{
   bed({this.berth,this.profile,this.uname,this.message,this.phone,
-  this.from,this.to,this.roomno,this.centers,this.nlb,this.nmb,this.nub,this.docs,this.reqid});
+  this.from,this.to,this.roomno,this.centers,this.nlb,this.nmb,this.nub,this.docs,this.reqid,this.no});
   final String roomno;
   final String centers;
   final num nlb,nmb,nub;
-  final String berth,profile,uname,message,phone,from,to,docs,reqid;
+  final String berth,profile,uname,message,phone,from,to,docs,reqid,no;
   berths createState()=>berths(berth: berth,
      uname: uname,message: message,phone: phone,from:from,to:to,
-     roomno: roomno,centers: centers,nlb: nlb,nmb: nmb,nub: nub,docs: docs,reqid: reqid);
+     roomno: roomno,centers: centers,nlb: nlb,nmb: nmb,nub: nub,docs: docs,reqid: reqid,no: no);
 }
 
 // ignore: camel_case_types
 class berths extends State<bed>{
   berths({this.berth,this.profile,this.uname,this.message,this.phone,
-  this.from,this.to,this.roomno,this.centers,this.nlb,this.nmb,this.nub,this.docs,this.reqid});
+  this.from,this.to,this.roomno,this.centers,this.nlb,this.nmb,this.nub,this.docs,this.reqid,this.no});
   final String roomno;
   final String centers;
   final num nlb,nmb,nub;
-  final String berth,profile,uname,message,phone,from,to,reqid,docs;
+  final String berth,profile,uname,message,phone,from,to,reqid,docs,no;
   num c=0,type;
   // ignore: non_constant_identifier_names
   String a1,a2,a3,From,To;
@@ -43,6 +43,18 @@ class berths extends State<bed>{
   static var  formatter = DateFormat('yyyy-MM-dd');
   static var today = formatter.format(now);
   bool active = false;
+  bool adm = false;
+
+
+ Future checkforadmin() async{
+   var admr = await Firestore.instance.collection('FOLKGuides').where('mobile_number',isEqualTo:no).getDocuments();
+   admr.documents.forEach((ele){
+     setState(() {
+       adm = ele.data['admin'];
+     });
+
+   });
+ }
 
    
 
@@ -177,7 +189,7 @@ class berths extends State<bed>{
                 onPressed: () async{
                     Navigator.of(context).pop();
                     Navigator.push(context, MaterialPageRoute(builder: (context)=>
-                      mainpage(center: centers,)));
+                      mainpage(center: centers,no: no,)));
 
                
                 },
@@ -278,9 +290,11 @@ class berths extends State<bed>{
                                   ,int.parse(To.substring(8,10)),int.parse(To.substring(11,13)),int.parse(To.substring(14,16))).millisecondsSinceEpoch.toString(); 
                                    
                                  });
-                                 
-                                
+                                 int to = int.parse(To);
+                                 int from = int.parse(From)+259200000;
+                                  if(to<=from || adm){
                                  allocating(bedno,From,To,type);
+                                  }
                                }
 
                               },
@@ -482,6 +496,7 @@ class berths extends State<bed>{
     @override
   void initState() {
     super.initState();
+    checkforadmin();
     greatest(nlb,nmb,nub);
     smallests(nlb,nmb,nub);
     middles(nlb,nmb,nub);
@@ -507,7 +522,7 @@ class berths extends State<bed>{
                   Navigator.of(context).pop();
                   Navigator.push(context, MaterialPageRoute(builder: (context)=>callocation(berth:berth,profile:profile,
                   uname:uname,message:message,phone:phone,
-                   from:from,to:to,center:centers,doc: docs,reqid: reqid,
+                   from:from,to:to,center:centers,doc: docs,reqid: reqid,no: no,
                   )));
                 },
               );
