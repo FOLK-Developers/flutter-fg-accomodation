@@ -202,7 +202,7 @@ class custom_allocation extends State<callocation>{
     String flag;
     num i=0;
     room.clear();
-    var collectionRef = await Firestore.instance.collection('Centers').where('centre',isEqualTo:center).getDocuments();
+    var collectionRef = await Firestore.instance.collection('Centres').where('centre',isEqualTo:center).getDocuments();
       collectionRef.documents.forEach((element) {
         flag = element.documentID;
       });
@@ -210,7 +210,7 @@ class custom_allocation extends State<callocation>{
         doc = flag;
     });
 
-    var centerdoc = await Firestore.instance.collection('Centers').document(doc).collection('data').where('lowerberth',isGreaterThan:0)
+    var centerdoc = await Firestore.instance.collection('Centres').document(doc).collection('data').where('lowerberth',isGreaterThan:0)
     .getDocuments();
             centerdoc.documents.forEach((roomN) {
               setState(() {
@@ -218,6 +218,7 @@ class custom_allocation extends State<callocation>{
                   roomN.data['middleberth'], roomN.data['upperberth'],i++));
                 });
           });
+
     }
 
   

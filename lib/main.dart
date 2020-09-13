@@ -38,7 +38,7 @@ class authentication extends State<myapp> {
 
 
   Future<void> getcenters() async{
-    var db = await Firestore.instance.collection('Centers').getDocuments();
+    var db = await Firestore.instance.collection('Centres').getDocuments();
     db.documents.forEach((element){
       setState(() {
         centers.add(element.data['centre']);
@@ -95,12 +95,12 @@ class authentication extends State<myapp> {
       });
        if(val==n){
        Navigator.push(context, MaterialPageRoute(builder:(context)=>mainpage(center: selectedcenter,no:no)));
-     }
-     else{
-         setState((){
-             error = 'access denied';
-             phoneno.clear();
-           });
+       }
+       else{
+           setState((){
+               error = 'access denied';
+               phoneno.clear();
+             });
   }
   
      
@@ -176,7 +176,7 @@ class authentication extends State<myapp> {
                                       fontSize: 16
                                   ),),
                               Container(
-                                width:100,
+                                width:120,
                                 height:30,
                                 color: Colors.white,
                                 child: Platform.isIOS ? iOSPicker() : androidDropdown(),

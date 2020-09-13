@@ -37,7 +37,7 @@ class berths extends State<bed>{
   List <Row> bed = [];
   String selected = 'No, bed selected',status='No, bed assigned.Yet',btn='allocate';
   String date = '',date2='',time='',time2='',docid;
-  var db  = Firestore.instance.collection('Centers');
+  var db  = Firestore.instance.collection('Centres');
   roomdata room = roomdata();
   static DateTime now = DateTime.now();
   static var  formatter = DateFormat('yyyy-MM-dd');
@@ -46,15 +46,12 @@ class berths extends State<bed>{
   bool adm = false;
 
 
- Future checkforadmin() async{
-   var admr = await Firestore.instance.collection('FOLKGuides').where('mobile_number',isEqualTo:no).getDocuments();
-   admr.documents.forEach((ele){
-     setState(() {
-       adm = ele.data['admin'];
-     });
+  Future checkforadmin() async{
+    var admr = await Firestore.instance.collection('FOLKGuides').where('mobile_number',isEqualTo:no).
+    where('accommodation_admin',arrayContains: centers).getDocuments();
+    this.adm = admr.documents.isNotEmpty;
 
-   });
- }
+  }
 
    
 
@@ -201,19 +198,32 @@ class berths extends State<bed>{
   }
 
   Future allocating(String bedno,String from,String to,num type) async{
-    var allocating = Firestore.instance.collection(centers).document(today).collection('allrequest').document(docs);
-    var hUpdate =  Firestore.instance.collection('Profile').document(phone).collection('history').document(reqid);
+    String cdoc;
+    var hUpdate;
+    var bed = await Firestore.instance.collection('Centres').where('centre',isEqualTo:centers).getDocuments();
+    bed.documents.forEach((checkfor) {
+      setState(() {
+        cdoc = checkfor.documentID;
+      });
+    });
+    var allocating = Firestore.instance.collection('Centres').document(cdoc).collection('AccommodationRequest').document(docs);
+    var temp = await  Firestore.instance.collection('Profile').where('mobile',isEqualTo: phone).getDocuments();
+    temp.documents.forEach((element) {
+      hUpdate = Firestore.instance.collection('Profile').document(element.documentID).collection('history').document(reqid);
+    });
     allocating.updateData({
       'allocated':roomno+','+bedno,
       'status':'Ready to occupy',
       'from':from,
-      'to':to
+      'to':to,
+      'fg':no
     }).then((value){
       hUpdate.updateData({
         'allocated':roomno+','+bedno,
         'status':'Ready to occupy',
         'from':from,
-        'to':to
+        'to':to,
+        'fg':no
         });
       db.document(docid).collection('Activeallocs').add({
         'allocated':roomno+','+bedno,

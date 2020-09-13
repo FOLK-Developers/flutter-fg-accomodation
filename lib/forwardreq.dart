@@ -21,7 +21,7 @@ class forward extends State<forwardreq>{
  forward({this.berth,this.profile,this.uname,this.message,this.phone,
   this.from,this.to,this.center,this.doc,this.reqid,this.no});
   final String berth,uname,message,phone,center,from,to,profile,doc,reqid,no;
-  var db  = Firestore.instance.collection('Centers');
+  var db  = Firestore.instance.collection('Centres');
   List<String> centers = [];
   String selectedcenter,fgmessage,docid,fwdmsg;
   TextEditingController fgmessages = TextEditingController();
@@ -33,13 +33,12 @@ class forward extends State<forwardreq>{
 
 
   Future<void> getcenters() async{
-    var db = await Firestore.instance.collection('Centers').getDocuments();
-    db.documents.forEach((element){
+    var database = await db.getDocuments();
+    database.documents.forEach((element){
       setState(() {
         if(element.data['centre']!=center){
         centers.add(element.data['centre']);
-                  selectedcenter = element.data['centre'];   
-
+        selectedcenter = element.data['centre'];
         }
         else{
           centers.add('Admin');
@@ -50,7 +49,7 @@ class forward extends State<forwardreq>{
   }
 
     Future getdoc() async{
-      var bed = await db.where('centre',isEqualTo:centers).getDocuments();
+      var bed = await db.where('centre',isEqualTo:center).getDocuments();
       bed.documents.forEach((checkforbed) {
         setState(() {
           docid = checkforbed.documentID;
@@ -132,41 +131,63 @@ class forward extends State<forwardreq>{
 
   // ignore: non_constant_identifier_names
   Future Forward() async{
-    var db = Firestore.instance.collection('Profile').document(phone).collection('history').document(reqid);
-    var cRecord =  Firestore.instance.collection(center).document(today).collection('allrequest').document(doc);
-    var forward =  Firestore.instance.collection(selectedcenter).document(today).collection('allrequest');
+    String tempdoc,user;
+    await Firestore.instance.collection('Profile').where('mobile',isEqualTo: phone).getDocuments().then((value){
+         value.documents.forEach((element) {
+           setState(() {
+             user = element.documentID;
+           });
+         });
+    });
+    var profiledata = Firestore.instance.collection('Profile').document(user).collection('history').document(reqid);
+    var cRecord =  db.document(docid).collection('AccommodationRequest').document(doc);
+    var bed = await db.where('centre',isEqualTo:selectedcenter).getDocuments();
+    bed.documents.forEach((checkforbed) {
+      setState(() {
+        if(selectedcenter!='Admin') {
+          tempdoc = checkforbed.documentID;
+        }
+      });
+    });
+
+    var forward =  db.document(tempdoc).collection('AccommodationRequest');
     DateFormat hm = DateFormat('Hm');
     String temp = now.millisecondsSinceEpoch.toString();
-    if(selectedcenter=='Admin'){
 
-     
-          cRecord.updateData({
-              'admin':true
+    if(selectedcenter=='Admin'){
+              cRecord.updateData({
+              'admin':true,
+              'status':'Forwarded to Admin'
               });
-    
+              profiledata.updateData({
+                'status':'Forward to Admin',
+              });
+              question(context,'Fwd successfully','Request was successfully forwarded to center administrator.');
 
     }
     else{
-    db.updateData({
-      'status':'Forward to $selectedcenter',
+    profiledata.updateData({
+      'status':'Forwarded to $selectedcenter',
       }).then((value){
           cRecord.updateData({
-              'status':'Forward to $selectedcenter',
+              'status':'Forwarded to $selectedcenter',
               }).then((value) {
                 forward.add( {
-                    "Folkname": uname,
-                    "Mobile_Number": phone,
+                    "name": uname,
+                    "mobile": phone,
                     "preferred_berth": berth,
                     "Message":fwdmsg,
                     "status":"Waiting for approval",
                     "allocated":"null",
                     "type":0,
+                    'date':formatter.format(DateTime.now()),
                     "reqid":reqid,
                     "rtime":hm.format(now) ,
                     'from': temp,
-                    'to': to 
-                  });    
-                  question(context,'Fwd successfully','Request was successfully forwarded to $selectedcenter center.');                                  
+                    'to': to ,
+                    'admin':false
+                  });
+                  question(context,'Fwd successfully','Request was successfully forwarded to $selectedcenter center.');
                 });
                 });
     }
@@ -179,6 +200,7 @@ class forward extends State<forwardreq>{
   void initState() {
     super.initState();
     getcenters();
+    getdoc();
     setState(() {
     if(message=='No message'){
       fwdmsg = '[Fwd from:$center]';
@@ -436,7 +458,7 @@ Container messages(){
                                     fontSize: 16
                                   ),),
                                 Container( 
-                                          width:100,
+                                          width:120,
                                           height:30,
                                           color: Colors.white,
                                           child: Platform.isIOS ? iOSPicker() : androidDropdown(),
@@ -481,16 +503,5 @@ Container messages(){
 
 
 
-// Expanded(
-//                      child: Column(
-//                        children: [
-//                          
-                 
-//                     SizedBox(height:5,),   
-//                     
 
-//                        ]
-//                        ,)
-                  
-//                    ),
                   

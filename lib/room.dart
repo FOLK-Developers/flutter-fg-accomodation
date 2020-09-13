@@ -30,10 +30,16 @@ class roomdata extends State<room>{
   List <MaterialButton> middle = [];
   List <MaterialButton> upper = [];
   List <String> berths =['lb', 'mb','ub'];
-  var db  = Firestore.instance.collection('Centers');
+  var db  = Firestore.instance.collection('Centres');
   bool active = false;
+  bool adm = false;
 
+  Future checkforadmin() async{
+    var admr = await Firestore.instance.collection('FOLKGuides').where('mobile_number',isEqualTo:no).
+    where('accommodation_admin',arrayContains: centers).getDocuments();
+    this.adm = admr.documents.isNotEmpty;
 
+  }
   Future<bool> question(BuildContext context,String bedno,String summary) {
     return showDialog(
         context: context,
@@ -63,19 +69,103 @@ class roomdata extends State<room>{
         });
   }
 
-   Future getdoc(berth) async{
-     
-     var details = await Firestore.instance.collection('Centers').document(doc).collection('Activeallocs').where('allocated',isEqualTo:rn+','+berth).
-          getDocuments();
-          if(details.documents.isNotEmpty)
-          details.documents.forEach((element) async {
-               var beduser = await Firestore.instance.collection('Profile').document(element.data['allocated_to']).collection('history').document(element.data['reqid']).get();
-                question(context,berth,'Occupied By, Name:'+beduser.data['Folkname']+',Phone No:'+beduser.data['Mobile_Number']+',From:'+
-                DateTime.fromMillisecondsSinceEpoch(int.parse(beduser.data['from'])).toUtc().toString().substring(0,16)
-              +',to:'+DateTime.fromMillisecondsSinceEpoch(int.parse(beduser.data['to'])).toUtc().toString().substring(0,16));
-            });
+  Future<bool> deallocate(BuildContext context,String bedno,String summary,bool admin,String reqid,String udoc,String Cdoc,String authorised) {
+    return showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return new AlertDialog(
+            title: Text(bedno
+              ,textAlign: TextAlign.left,),
+            content: Text(summary),
+            contentPadding: EdgeInsets.all(10.0),
+            actions: <Widget>[
+
+              FlatButton(
+                child: Text('deallocate',
+                  style: TextStyle(
+                      color: authorised==no ?Colors.black:Colors.transparent,
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold
+                  ),),
+                onPressed: () async{
+                  if(authorised==no){
+                       db.document(doc).collection('AccommodationRequest').document(Cdoc).updateData({
+                         'status':'Request was declined by fg'
+                       });
+                       db.document(doc).collection('Activeallocs').where('allocate',isEqualTo: bedno).getDocuments().then((value) {
+                         value.documents.forEach((element) {
+                           db.document(doc).collection('Activeallocs').document(element.documentID).delete();
+                         });
+                       });
+                       Firestore.instance.collection('Profile').document(udoc).collection('history').document(reqid).
+                        updateData({
+                        'status':'Request was declined by fg'
+                        });
+
+                  }
+                  Navigator.of(context).pop();
+                },
+                padding: EdgeInsets.all(9),
+              ),
+              FlatButton(
+                child: Text("Ok",
+                  style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold
+                  ),),
+                onPressed: () async{
+
+                  Navigator.of(context).pop();
+                },
+                padding: EdgeInsets.all(9),
+              ),
+            ],
+          );
+        });
+  }
+
+
+  Future getdoc(berth) async{
+
+     String reqid,udoc,cdoc;
+     var  beduser, hUpdate,details;
+     var profile =  Firestore.instance.collection('Profile');
+     var center = await Firestore.instance.collection('Centres').where('centre',isEqualTo:centers).getDocuments();
+     center.documents.forEach((checkfor) async {
+         cdoc = checkfor.documentID;
+     });
+     details = db.document(cdoc).collection('Activeallocs');
+     var temp = await details.where('allocated',isEqualTo:rn+','+berth).getDocuments();
+          if(temp.documents.isNotEmpty) {
+              temp.documents.forEach((active) async {
+                reqid = active.data['reqid'];
+                profile.where('mobile', isEqualTo: active.data['allocated_to'])
+                    .getDocuments()
+                    .then((value) {
+                  value.documents.forEach((elements) async {
+                    udoc = elements.documentID;
+                    beduser = await profile.document(udoc).collection('history').document(reqid).get();
+                    deallocate(context,berth,'Occupied By, Name:' + beduser.data['name'] + ',From:' +
+                        DateTime.fromMillisecondsSinceEpoch(
+                            int.parse(beduser.data['from'])).toUtc()
+                            .toString()
+                            .substring(0, 16)
+                        + ',to:' + DateTime.fromMillisecondsSinceEpoch(
+                        int.parse(beduser.data['to'])).toUtc()
+                        .toString()
+                        .substring(0, 16),
+                        adm,
+                        reqid,
+                        udoc,
+                        active.documentID,beduser.data['fg']);
+                  });
+                });
+              });
+          }
           else{
-            question(context, berth,' bed is currently, Vacant.');
+            question(context, berth,'Bed is vacant, Currently.');
           }
         }
 

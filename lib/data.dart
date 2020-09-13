@@ -35,16 +35,12 @@ class bedavailable extends State<data>{
   bool adm = false;
 
 
- Future checkforadmin() async{
-   var admr = await Firestore.instance.collection('FOLKGuides').where('mobile_number',isEqualTo:no).getDocuments();
-   admr.documents.forEach((ele){
-     setState(() {
-       adm = ele.data['admin'];
-     });
+  Future checkforadmin() async{
+    var admr = await Firestore.instance.collection('FOLKGuides').where('mobile_number',isEqualTo:no).
+    where('accommodation_admin',arrayContains: center).getDocuments();
+    this.adm = admr.documents.isNotEmpty;
 
-   });
- }
-
+  }
 
 
 
@@ -88,7 +84,7 @@ class bedavailable extends State<data>{
 
   
     Future getdoc() async{
-      var bed = await Firestore.instance.collection('Centers').where('centre',isEqualTo:center).getDocuments();
+      var bed = await Firestore.instance.collection('Centres').where('centre',isEqualTo:center).getDocuments();
       bed.documents.forEach((checkforbed) {
         setState(() {
           docid = checkforbed.documentID;
@@ -102,32 +98,33 @@ class bedavailable extends State<data>{
   // ignore: missing_return
   Future<void> updates(String rn,num l,num m,num b) async{
     setState(() async {
-      var centerdoc =  Firestore.instance.collection('Centers').document(doc);
+      var centerdoc =  Firestore.instance.collection('Centres').document(docid);
       var addroom = centerdoc.collection('data');
       var db = await centerdoc.get();
       rcount = db.data['roomcount'];
       if(rcount==null){
-       centerdoc.setData({
-          'roomcount' : 1 
-       },merge: true).then((value) {
+       // centerdoc.setData({
+       //    'roomcount' : 1
+       // },merge: true).then((value) {
           addroom.document(rn).setData({
         'lowerberth':l,
         'middleberth':m,
         'upperberth':b
       });
-      });
+      // });
      }
     else{
       rcount++;
       addroom.document(rn).setData({
-        'lowerberth':l,
-        'middleberth':m,
-        'upperberth':b
-      }).then((value) {
-          centerdoc.updateData({
-            'roomcount': rcount
-          });
-          });
+        'lowerberth': l,
+        'middleberth': m,
+        'upperberth': b
+      });
+      // }).then((value) {
+      //     centerdoc.updateData({
+      //       'roomcount': rcount
+      //     });
+      //     });
       }
      });
   }
@@ -168,16 +165,17 @@ class bedavailable extends State<data>{
                           fontWeight: FontWeight.bold
                       ),),
                     onPressed: () async{
-                      var collection = Firestore.instance.collection('Centers').document(doc);
-                                var db = await collection.get();
-                                num temp = await db.data['roomcount'];  
-                                temp = temp-1;
-                                 collection.collection('data')
-                                    .document(ddoc).delete().then((value) {
-                                       collection.updateData({
-                                      'roomcount': temp
-                                      });
-                                    });
+                      var collection = Firestore.instance.collection('Centres').document(doc);
+                                // var db = await collection.get();
+                                // num temp = await db.data['roomcount'];
+                                // temp = temp-1;
+                                 await collection.collection('data')
+                                    .document(ddoc).delete();
+                                 // then((value) {
+                                 //       collection.updateData({
+                                 //      'roomcount': temp
+                                 //      });
+                                 //    });
                                     Navigator.of(context).pop();
                                   },
                     padding: EdgeInsets.all(9),
@@ -191,7 +189,14 @@ class bedavailable extends State<data>{
 
 
   Future reqcount() async {
-    var db = Firestore.instance.collection(center).document(today).collection('allrequest');
+    String cdocu;
+    var bed = await Firestore.instance.collection('Centres').where('centre',isEqualTo:center).getDocuments();
+    bed.documents.forEach((checkfor) {
+      setState(() {
+        cdocu = checkfor.documentID;
+      });
+    });
+    var db = Firestore.instance.collection('Centres').document(cdocu).collection('AccommodationRequest');
     var docu = await db.where('status',isEqualTo:'Waiting for approval').getDocuments();
        if(docu.documents.isNotEmpty) {
          docu.documents.forEach((element) {
@@ -337,9 +342,8 @@ class bedavailable extends State<data>{
     num temp1=0,temp2=0,temp3=0;
     String flag='';
     var checkroom;
-    var check =  Firestore.instance.collection(center).document(today).collection('Activeallocs');
     roomslist.clear();
-    var collectionRef = await Firestore.instance.collection('Centers').where('centre',isEqualTo:center).getDocuments();
+    var collectionRef = await Firestore.instance.collection('Centres').where('centre',isEqualTo:center).getDocuments();
       collectionRef.documents.forEach((element) {
         flag = element.documentID;
       });
@@ -347,9 +351,10 @@ class bedavailable extends State<data>{
         doc = flag;
     });
 
-    var centerdoc = await Firestore.instance.collection('Centers').document(doc).collection('data').where('lowerberth',isGreaterThan:0)
+    var check =  Firestore.instance.collection('Centres').document(doc).collection('Activeallocs');
+    var centerdoc = await Firestore.instance.collection('Centres').document(doc).collection('data').where('lowerberth',isGreaterThan:0)
     .getDocuments();
-    var db = await Firestore.instance.collection('Centers').document(doc).get();
+    var db = await Firestore.instance.collection('Centres').document(doc).get();
 
             centerdoc.documents.forEach((roomN) async{
               temp1 = temp1 + roomN.data['lowerberth'];
@@ -367,7 +372,7 @@ class bedavailable extends State<data>{
       mb = temp2;
       ub = temp3;
       count = temp1 + temp2 + temp3;
-      admin =  db.data['admin']!='null'?'':db.data['admin'];
+      admin =  db.data['fg_name']==null?'': db.data['fg_name'];
       location = db.data['centre'];
    
     });
@@ -489,7 +494,7 @@ class bedavailable extends State<data>{
                 child: Text(button),
                 onPressed: () {
                   if(button=='Save') {
-                    var db =  Firestore.instance.collection('Centers').document(doc);
+                    var db =  Firestore.instance.collection('Centres').document(doc);
                     if(edoc==rname){
                        db.collection('data').document(edoc).updateData({
                           "lowerberth" : lb1,
@@ -515,16 +520,20 @@ class bedavailable extends State<data>{
                   else{
                     setState(() async {
                        updates(rname,lb1, mb1, ub1);
-                       var checkroom = await Firestore.instance.collection(center).document(today).collection('Activeallocs').
+                       var checkroom = await Firestore.instance.collection('Centres').document(doc).collection('Activeallocs').
                        where('room',isEqualTo:roomname.text).getDocuments();
-                       roomslist.add(rooms(roomname.text,num.parse(lowerberth.text),
-                      num.parse(middleberth.text),num.parse(upperberth.text),type,i,checkroom.documents.isEmpty));
+                       setState(() {
+                         roomslist.add(rooms(roomname.text,num.parse(lowerberth.text),
+                             num.parse(middleberth.text),num.parse(upperberth.text),type,i,checkroom.documents.isEmpty));
+                       });
                       lowerberth.clear();
                       upperberth.clear();
                       middleberth.clear();
                       roomname.clear();
+                       Navigator.of(context).pop();
+
+
                     });
-                      Navigator.of(context).pop();
                   }
                 },
                 padding: EdgeInsets.all(9),

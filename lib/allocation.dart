@@ -1,4 +1,3 @@
-
 import 'dart:math';
 import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -6,11 +5,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-// import 'package:folkguideapp/forwardreq.dart';
+import 'package:folkguideapp/forwardreq.dart';
 import 'package:intl/intl.dart';
-
 import 'callocation.dart';
 import 'forwardreq.dart';
+
 // ignore: camel_case_types
 class allocation extends StatefulWidget{
   allocation({this.center,this.no});
@@ -31,13 +30,14 @@ class allocationpage extends State<allocation>{
   static DateTime now = DateTime.now();
   static var  formatter = DateFormat('yyyy-MM-dd');
   static var today = formatter.format(now);
-  var collectonRef = Firestore.instance.collection('Centers');
+  var collectonRef = Firestore.instance.collection('Centres');
   var db = Firestore.instance;
 
   // ignore: non_constant_identifier_names
   List<String>lower_b = [];
   // ignore: non_constant_identifier_names
   List<String> middle_b = [];
+
   // ignore: non_constant_identifier_names
   List<String> upper_b = [];
   // ignore: non_constant_identifier_names
@@ -48,8 +48,9 @@ class allocationpage extends State<allocation>{
 
 
   Future allocater(String berth,String no,String reqid,String doc,num type) async {
-    String bed,room;
+    String bed,room,udoc;
     num temp = 0,n;
+    var hUpdate;
     // ignore: unused_local_variable
     var time = DateFormat('yMMMEd').format(DateTime.now());
 
@@ -61,8 +62,12 @@ class allocationpage extends State<allocation>{
           T_doc = checkforbed.documentID;
         });
         });
-    var hUpdate = Firestore.instance.collection('Profile').document(no).collection('history').document(reqid);
-    var cUpdate =  Firestore.instance.collection(center).document(today).collection('allrequest').document(doc);
+    await Firestore.instance.collection('Profile').where('mobile',isEqualTo: no).getDocuments().then((value) {
+        value.documents.forEach((element) {
+          hUpdate = Firestore.instance.collection('Profile').document(element.documentID).collection('history').document(reqid);
+        });
+    });
+    var cUpdate =  collectonRef.document(T_doc).collection('AccommodationRequest').document(doc);
     var activeallocs = collectonRef.document(T_doc).collection('Activeallocs');
     if(berth=="LOWER_BERTH"){
       // temp = alb;
@@ -108,19 +113,21 @@ class allocationpage extends State<allocation>{
       hUpdate.updateData({
               "status": "Ready to occupy",
               "allocated": bed,
-              'from':val
+              'from':val,
+              'fg':no
             }).then((value){
                   cUpdate.updateData({
                       "status": "Ready to occupy",
                       "allocated":bed,
                       'from':val,
+                       'fg':no
                     });
                   activeallocs.add({
                         'allocated':bed,
                         'allocated_to':no,
                         'reqid':reqid,
                         'type':type,
-                        'room':room
+                        'room':room,
                     });
             });
   }
@@ -221,51 +228,59 @@ void bed_checker(num lb,num mb,num ub,String room){
 
 
   Future allocaterequests() async {
-   // ignore: unused_local_variable
-   String cdoc;
-          var bed = await collectonRef.where('centre',isEqualTo:center).getDocuments();
-          bed.documents.forEach((checkfor) {
-            setState(() {
-              cdoc = checkfor.documentID;
-            });
+
+    var formatter = new DateFormat('yyyy-MM-dd');
+    var date = formatter.format(DateTime.now());
+    // ignore: unused_local_variable
+    String cdoc;
+    var bed = await collectonRef.where('centre',isEqualTo:center).getDocuments();
+        bed.documents.forEach((checkfor) {
+          setState(() {
+            cdoc = checkfor.documentID;
           });
-        var db = Firestore.instance.collection(center).document(today).collection('allrequest');
-        var docu= await db.where('status',isEqualTo: "Waiting for approval").getDocuments();
+        });
+        var db = collectonRef.document(cdoc).collection('AccommodationRequest');
+        var docu= await db.where('date',isEqualTo: date).where('status',isEqualTo: "Waiting for approval").getDocuments();
         if(docu!=null) {
           docu.documents.forEach((element) async {
             if (element.data['preferred_berth'] == "LOWER_BERTH"  && lower_b.length!=0) {
-              await allocater("LOWER_BERTH", element.data['Mobile_Number'],
+              await allocater("LOWER_BERTH", element.data['mobile'],
                   element.data['reqid'], element.documentID,1);
             }
             else if (element.data['preferred_berth'] == "MIDDLE_BERTH"  && middle_b.length!=0) {
-              await allocater("MIDDLE_BERTH", element.data['Mobile_Number'],
+              await allocater("MIDDLE_BERTH", element.data['mobile'],
                   element.data['reqid'], element.documentID,2);
             }
             else if (element.data['preferred_berth'] == "UPPER_BERTH"&& upper_b.length!=0) {
-            await allocater("UPPER_BERTH", element.data['Mobile_Number'],
+            await allocater("UPPER_BERTH", element.data['mobile'],
                   element.data['reqid'], element.documentID,3);
             }
             else {
               if (lower_b.length> 0) {
-                await allocater("LOWER_BERTH" , element.data['Mobile_Number'],
+                await allocater("LOWER_BERTH" , element.data['mobile'],
                     element.data['reqid'], element.documentID,1);
               }
               else if (middle_b.length> 0) {
-                await allocater("MIDDLE_BERTH" , element.data['Mobile_Number'],
+                await allocater("MIDDLE_BERTH" , element.data['mobile'],
                     element.data['reqid'], element.documentID,2);
               }
               else if (upper_b.length>0)
               {
-                await allocater("UPPER_BERTH" , element.data['Mobile_Number'],
+                await allocater("UPPER_BERTH" , element.data['mobile'],
                     element.data['reqid'], element.documentID,3);
               }
               else {
-                await Firestore.instance.collection('Profile').document(element.data['Mobile_Number']).
-                 collection('history').document(element.data['reqid']).updateData({
-                  "status":"No beds available, Currently",
-                  "allocated":"No bed was allocated"
-                }).then((value){
-                  db.document(element.documentID).delete();
+                await Firestore.instance.collection('Profile').where('mobile',isEqualTo: element.data['mobile']).getDocuments().
+                then((value){
+                   value.documents.forEach((elements) async{
+                      await Firestore.instance.collection('Profile').document(elements.data['mobile']).
+                      collection('history').document(element.data['reqid']).updateData({
+                        "status":"No beds available, Currently",
+                        "allocated":"No bed was allocated"
+                      }).then((value){
+                        db.document(element.documentID).delete();
+                      });
+                   });
                 });
               }
             }
@@ -281,33 +296,39 @@ void bed_checker(num lb,num mb,num ub,String room){
         }
       }
 
-  Future checkforadmin() async{
-   var admr = await Firestore.instance.collection('FOLKGuides').where('mobile_number',isEqualTo:no).getDocuments();
-   admr.documents.forEach((ele){
-     setState(() {
-       adm = ele.data['admin'];
-     });
-
-   });
-
- }
+        Future checkforadmin() async{
+         var admr = await Firestore.instance.collection('FOLKGuides').where('mobile_number',isEqualTo:no).
+         where('accommodation_admin',arrayContains: center).getDocuments();
+         this.adm = admr.documents.isNotEmpty;
+        }
 
 
 
       Future deleterequests() async {
-        var db = Firestore.instance.collection(center).document(today).collection('allrequest');
+        String cdocu;
+        var bed = await collectonRef.where('centre',isEqualTo:center).getDocuments();
+        bed.documents.forEach((checkfor) {
+          setState(() {
+            cdocu = checkfor.documentID;
+          });
+        });
+        var userhistory = Firestore.instance.collection('Profile');
+        var db = collectonRef.document(cdocu).collection('AccommodationRequest');
         var docu= await db.where('status',isEqualTo: "Waiting for approval").getDocuments();
-        var cdelete =  Firestore.instance.collection(center).document(today).collection('allrequests');
         if(docu.documents.isNotEmpty) {
           docu.documents.forEach((element) async {
-            await Firestore.instance.collection('Profile').document(
-                element.data['Mobile_Number']).
-            collection('history').document(element.data['reqid']).updateData({
-              "status": 'Request was declined.',
-              "allocated":"No bed was allocated"
-            }).then((value) async {
-              cdelete.document(element.documentID).delete();
+            await userhistory.where('mobile',isEqualTo: element.data['mobile']).getDocuments().then((value){
+                 value.documents.forEach((elements) {
+                    userhistory.document(elements.documentID).
+                   collection('history').document(element.data['reqid']).updateData({
+                     "status": 'Request was declined.',
+                     "allocated":"No bed was allocated"
+                   }).then((value) async {
+                     db.document(element.documentID).delete();
+                   });
+                 });
             });
+
           });
           noreqs("Request's declined, Successfully.");
         }
@@ -324,8 +345,15 @@ void bed_checker(num lb,num mb,num ub,String room){
         ));
       }
 
-  Future reqcount() async {
-    var db = Firestore.instance.collection(center).document(today).collection('allrequest');
+  Future reqcount() async{
+      String cdocu;
+      var bed = await collectonRef.where('centre',isEqualTo:center).getDocuments();
+      bed.documents.forEach((checkfor) {
+      setState(() {
+      cdocu = checkfor.documentID;
+      });
+      });
+    var db =  collectonRef.document(cdocu).collection('AccommodationRequest');
     var docu = await db.where('status',isEqualTo:'Waiting for approval').getDocuments();
        if(docu.documents.isNotEmpty) {
          docu.documents.forEach((element) {
@@ -360,7 +388,7 @@ void bed_checker(num lb,num mb,num ub,String room){
               TDoc = checkforbed.documentID;
             });
             });
-      var doc = await Firestore.instance.collection('Centers').document(TDoc).collection('data').getDocuments();
+      var doc = await Firestore.instance.collection('Centres').document(TDoc).collection('data').getDocuments();
       var db = Firestore.instance.collection(center).document(today).collection('allrequest');
       // ignore: unused_local_variable
       var requests = await db.getDocuments();
@@ -459,31 +487,32 @@ void bed_checker(num lb,num mb,num ub,String room){
    Future expiredbeds() async{
     // ignore: non_constant_identifier_names
     String TDoc;
-    // ignore: unused_local_variable
-    String bedno,from,no;
-
-    // ignore: unused_local_variable
+    String bedno,from,no,tempdoc;
     var ceterdoc,temp,temp1,hUpdate;
-    
-    var centerdoc = await db.collection('Centers').where('centre',isEqualTo:center).getDocuments();
+    int val = DateTime.now().millisecondsSinceEpoch;
+
+    var centerdoc = await collectonRef.where('centre',isEqualTo:center).getDocuments();
     centerdoc.documents.forEach((checkforbed) {
          TDoc = checkforbed.documentID;
     });
-    int val = DateTime.now().millisecondsSinceEpoch;
-    
-    var activeallocs = db.collection('Centers').document(TDoc).collection('Activeallocs');
-    var cUpdate = db.collection(center).document(today).collection('allrequest');
-    temp1 = await cUpdate.where('status',isEqualTo:'Ready to occupy').
-     getDocuments();
-
+    var database =  collectonRef.document(TDoc);
+    var activeallocs = database.collection('Activeallocs');
+    var cUpdate =  database.collection('AccommodationRequest');
+    temp1 =  cUpdate.where('status',isEqualTo:'Ready to occupy').getDocuments();
+    var profile = db.collection('Profile');
 
     if(temp1.documents.isNotEmpty){
         // ignore: non_constant_identifier_names
-        temp1.documents.forEach((ExpiredReserv) async{
-          if(int.parse(ExpiredReserv.data['to'])<=val){
-          temp = await activeallocs.where('allocated',isEqualTo:ExpiredReserv.data['allocated']).getDocuments();
+        temp1.documents.forEach((ExpiredReq) async{
+          if(int.parse(ExpiredReq.data['to'])<=val){
+          temp = await activeallocs.where('allocated',isEqualTo:ExpiredReq.data['allocated']).getDocuments();
+          profile.where('mobile',isEqualTo:ExpiredReq.data['mobile'] ).getDocuments().then((value) {
+              value.documents.forEach((element) {
+                 tempdoc = element.documentID;
+              });
+          });
 
-          db.collection('Profile').document(ExpiredReserv.data['Mobile_Number']).collection('history').document(ExpiredReserv.data['reqid']).updateData({
+          db.collection('Profile').document(tempdoc).collection('history').document(ExpiredReq.data['reqid']).updateData({
                     'status' : 'Request expired'
                     });
 
@@ -492,7 +521,7 @@ void bed_checker(num lb,num mb,num ub,String room){
             });           
 
 
-          cUpdate.document(ExpiredReserv.documentID).updateData({
+          cUpdate.document(ExpiredReq.documentID).updateData({
             'status':'Request expired',
           });
           }
@@ -512,7 +541,7 @@ void bed_checker(num lb,num mb,num ub,String room){
       zone = center;
       
       bedData();
-      expiredbeds();
+      // expiredbeds();
       getdoc();
       }
 
@@ -523,10 +552,10 @@ void bed_checker(num lb,num mb,num ub,String room){
             body:Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
-                    // Expanded(child: Text(lower_b.toString(),style: TextStyle(
-                    //   fontSize: 7
+                    // Expanded(child:Text( adm.toString(),style: TextStyle(
+                    //   fontSize: 10
                     //             ),)),
-                    Expanded(child:requestlist(center: center,adm: adm,)),
+                    Expanded(child:requestlist(center: center,adm: adm,doc: docid,no: no,)),
                     Container(
                       height: 50,
                       color: Colors.transparent,
@@ -579,8 +608,8 @@ void bed_checker(num lb,num mb,num ub,String room){
 // ignore: must_be_immutable
 // ignore: camel_case_types
 class requestlist extends StatelessWidget{
-  requestlist({this.center,this.adm});
-  final String center;
+  requestlist({this.center,this.adm,this.doc,this.no});
+  final String center,doc,no;
   final bool adm;
   static DateTime now = DateTime.now();
   static var  formatter = DateFormat('yyyy-MM-dd');
@@ -600,8 +629,8 @@ class requestlist extends StatelessWidget{
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
-        stream: Firestore.instance.collection(center).document(today).
-        collection('allrequest').where('status',isEqualTo: "Waiting for approval").where('admin',isEqualTo:adm==null?false:adm).
+        stream: Firestore.instance.collection('Centres').document(doc).
+        collection('AccommodationRequest').where('date',isEqualTo: today).where('status',isEqualTo: "Waiting for approval").where('admin',isEqualTo: adm).
         snapshots(),
         builder: (BuildContext context,
             AsyncSnapshot<QuerySnapshot> snapshot) {
@@ -648,7 +677,7 @@ class requestlist extends StatelessWidget{
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text(document['Folkname'],
+                                      Text(document['name'],
                                         style: TextStyle(
                                             color: Colors.black,
                                             fontSize: 16,
@@ -681,14 +710,22 @@ class requestlist extends StatelessWidget{
                       color: Colors.red,
                       icon: Icons.delete,
                       onTap: () async{
-                        await Firestore.instance.collection('Profile').document(document['Mobile_Number']).
-                        collection('history').document(document['reqid']).updateData({
-                          "status":"Request was declined",
-                          "allocated":"No bed was allocated"
-                        }).then((value) async{
-                          await Firestore.instance.collection(center).document(today).
-                          collection('allrequest').document(document.documentID).delete();
-                        });
+                                Firestore.instance.collection('Profile').where('mobile',isEqualTo:document['mobile'] )
+                                    .getDocuments().then((value) {
+                                  value.documents.forEach((element) async {
+                                    await Firestore.instance.collection('Profile').document(element.documentID).
+                                    collection('history').document(
+                                        document['reqid']).updateData({
+                                      "status": "Request was declined",
+                                      "allocated": "No bed was allocated"
+                                    }).then((value) async {
+                                      await Firestore.instance.collection(
+                                          'Centres').document(doc).
+                                      collection('AccommodationRequest').document(
+                                          document.documentID).delete();
+                                    });
+                                  });
+                                });
                         },
                     ),
                   ],
@@ -698,12 +735,12 @@ class requestlist extends StatelessWidget{
                         color: Colors.green[900],
                         icon: Icons.priority_high,
                         onTap: (){
-                           Navigator.push(context, MaterialPageRoute(builder: (context)=>
-                        callocation(berth: document['preferred_berth'],phone:document['Mobile_Number'],
+                          Navigator.push(context, MaterialPageRoute(builder: (context)=>
+                        callocation(berth: document['preferred_berth'],phone:document['mobile'],
                         message: document['Message'],uname: 
-                        document['Folkname'],from:document['from']
+                        document['name'],from:document['from']
                         ,to:document['to'],profile: images.elementAt(2),
-                        center:center,doc:document.documentID,reqid:document['reqid'],)));  
+                        center:center,doc:document.documentID,reqid:document['reqid'],no: no,)));
                         },
                       ),
                       IconSlideAction(
@@ -712,11 +749,11 @@ class requestlist extends StatelessWidget{
                         icon: Icons.forward,
                         onTap: (){
                         Navigator.push(context, MaterialPageRoute(builder: (context)=>
-                        forwardreq(berth: document['preferred_berth'],phone:document['Mobile_Number'],
+                        forwardreq(berth: document['preferred_berth'],phone:document['mobile'],
                         message: document['Message'],uname: 
-                        document['Folkname'],from:document['from'],to:
+                        document['name'],from:document['from'],to:
                         document['to'],profile: images.elementAt(2),
-                        center:center,doc:document.documentID,reqid:document['reqid'],)));                         
+                        center:center,doc:document.documentID,reqid:document['reqid'],no:no ,)));
                          },
                       ),
                     ],);
