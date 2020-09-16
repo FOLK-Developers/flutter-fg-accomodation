@@ -489,7 +489,7 @@ void bed_checker(num lb,num mb,num ub,String room){
     String TDoc;
     String bedno,from,no,tempdoc;
     var ceterdoc,temp,temp1,hUpdate;
-    int val = DateTime.now().millisecondsSinceEpoch;
+    DateTime val = DateTime.now().toUtc();
 
     var centerdoc = await collectonRef.where('centre',isEqualTo:center).getDocuments();
     centerdoc.documents.forEach((checkforbed) {
@@ -504,7 +504,9 @@ void bed_checker(num lb,num mb,num ub,String room){
     if(temp1.documents.isNotEmpty){
         // ignore: non_constant_identifier_names
         temp1.documents.forEach((ExpiredReq) async{
-          if(int.parse(ExpiredReq.data['to'])<=val){
+          DateTime temporary = DateTime.fromMicrosecondsSinceEpoch(ExpiredReq.data['to']).toUtc();
+
+          if(temporary.isBefore(val)){
           temp = await activeallocs.where('allocated',isEqualTo:ExpiredReq.data['allocated']).getDocuments();
           profile.where('mobile',isEqualTo:ExpiredReq.data['mobile'] ).getDocuments().then((value) {
               value.documents.forEach((element) {
@@ -541,7 +543,7 @@ void bed_checker(num lb,num mb,num ub,String room){
       zone = center;
       
       bedData();
-      // expiredbeds();
+      expiredbeds();
       getdoc();
       }
 

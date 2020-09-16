@@ -33,7 +33,7 @@ class roomdata extends State<room>{
   var db  = Firestore.instance.collection('Centres');
   bool active = false;
   bool adm = false;
-
+  String title = '';
   Future checkforadmin() async{
     var admr = await Firestore.instance.collection('FOLKGuides').where('mobile_number',isEqualTo:no).
     where('accommodation_admin',arrayContains: centers).getDocuments();
@@ -69,7 +69,8 @@ class roomdata extends State<room>{
         });
   }
 
-  Future<bool> deallocate(BuildContext context,String bedno,String summary,bool admin,String reqid,String udoc,String Cdoc,String authorised) {
+  Future<bool> deallocate(BuildContext context,String bedno,String summary,bool admin,String reqid,String profileDoc,String cdoc,String activeDoc,String authorised
+      ,String aDoc) {
     return showDialog(
         context: context,
         barrierDismissible: false,
@@ -84,21 +85,18 @@ class roomdata extends State<room>{
               FlatButton(
                 child: Text('deallocate',
                   style: TextStyle(
-                      color: authorised==no ?Colors.black:Colors.transparent,
+                      color: authorised=='+91'+no ?Colors.black:Colors.transparent,
                       fontSize: 15,
                       fontWeight: FontWeight.bold
                   ),),
                 onPressed: () async{
-                  if(authorised==no){
-                       db.document(doc).collection('AccommodationRequest').document(Cdoc).updateData({
-                         'status':'Request was declined by fg'
-                       });
-                       db.document(doc).collection('Activeallocs').where('allocate',isEqualTo: bedno).getDocuments().then((value) {
-                         value.documents.forEach((element) {
-                           db.document(doc).collection('Activeallocs').document(element.documentID).delete();
-                         });
-                       });
-                       Firestore.instance.collection('Profile').document(udoc).collection('history').document(reqid).
+                  if(authorised=='+91'+no){
+                      db.document(cdoc).collection('Activeallocs').document(activeDoc).delete();
+                      db.document(cdoc).collection('AccommodationRequest').document(aDoc).updateData({
+                        'status':'Request was declined by fg'
+                      });
+
+                       Firestore.instance.collection('Profile').document(profileDoc).collection('history').document(reqid).
                         updateData({
                         'status':'Request was declined by fg'
                         });
@@ -129,18 +127,24 @@ class roomdata extends State<room>{
 
   Future getdoc(berth) async{
 
-     String reqid,udoc,cdoc;
-     var  beduser, hUpdate,details;
+     String reqid,udoc,cdoc,aDoc;
+     var  beduser, hUpdate,details,accommodationReq;
      var profile =  Firestore.instance.collection('Profile');
      var center = await Firestore.instance.collection('Centres').where('centre',isEqualTo:centers).getDocuments();
      center.documents.forEach((checkfor) async {
          cdoc = checkfor.documentID;
      });
+     accommodationReq = db.document(cdoc).collection('AccommodationRequest');
      details = db.document(cdoc).collection('Activeallocs');
      var temp = await details.where('allocated',isEqualTo:rn+','+berth).getDocuments();
           if(temp.documents.isNotEmpty) {
               temp.documents.forEach((active) async {
                 reqid = active.data['reqid'];
+                accommodationReq.where('reqid',isEqualTo:reqid).getDocuments().then((value){
+                  value.documents.forEach((accommodation) async {
+                     aDoc = accommodation.documentID;
+                  });
+                });
                 profile.where('mobile', isEqualTo: active.data['allocated_to'])
                     .getDocuments()
                     .then((value) {
@@ -159,7 +163,9 @@ class roomdata extends State<room>{
                         adm,
                         reqid,
                         udoc,
-                        active.documentID,beduser.data['fg']);
+                        cdoc,
+                        active.documentID,beduser.data['fg'],
+                        aDoc);
                   });
                 });
               });
